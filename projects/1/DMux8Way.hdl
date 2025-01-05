@@ -8,6 +8,7 @@
  *                            [0, in,  0,  0,  0,  0,  0,  0] if sel = 001
  *                            [0,  0, in,  0,  0,  0,  0,  0] if sel = 010
  *                            [0,  0,  0, in,  0,  0,  0,  0] if sel = 011
+
  *                            [0,  0,  0,  0, in,  0,  0,  0] if sel = 100
  *                            [0,  0,  0,  0,  0, in,  0,  0] if sel = 101
  *                            [0,  0,  0,  0,  0,  0, in,  0] if sel = 110
@@ -18,6 +19,8 @@ CHIP DMux8Way {
     OUT a, b, c, d, e, f, g, h;
 
     PARTS:
-    DMux4Way(in=in, sel=, a=, b=, c=, d=);
+    DMux(in=in, sel=sel[2], a=toABCD, b=toEFGH);
+    DMux4Way(in=toABCD, sel=sel[0..1], a=a, b=b, c=c, d=d);
+    DMux4Way(in=toEFGH, sel=sel[0..1], a=e, b=f, c=g, d=h);
 
 }
