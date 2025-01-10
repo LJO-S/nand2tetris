@@ -41,5 +41,52 @@ CHIP ALU {
         ng;      // if (out < 0)  equals 1, else 0
 
     PARTS:
-    //// Replace this comment with your code.
+    // zx
+    Mux16(a=true, b=false, sel=zx, out=zx16); // 1to16 bits
+    And16(a=x, b=zx16, out=wx1); 
+    // nx
+    Not16(in=wx1, out=wx2);
+    Mux16(a=wx1, b=wx2, sel=nx, out=xPostNZ);
+    // zy
+    Mux16(a=true, b=false, sel=zy, out=zy16); // 1to16 bits
+    And16(a=y, b=zy16, out=wy1); 
+    // ny
+    Not16(in=wy1, out=wy2);
+    Mux16(a=wy1, b=wy2, sel=ny, out=yPostNZ);
+
+    // f
+    // (f == 1)  sets out = x + y 
+    // (f == 0)  sets out = x & y
+    Add16(a=xPostNZ, b=yPostNZ, out=xyPlus);
+    And16(a=xPostNZ, b=yPostNZ, out=xyAnd);
+    Mux16(a=xyAnd, b=xyPlus, sel=f, out=fOut);
+
+    // no (and intermediary wOut)
+    Not16(in=fOut, out=notOut);
+    Mux16(a=fOut, b=notOut, sel=no, 
+    out[15]=wOutSign, 
+    out[8..14]=wOutMSB, 
+    out[0..7]=wOutLSB
+    );
+
+    // out
+    And16(
+    a[15]=wOutSign, 
+    a[8..14]=wOutMSB, 
+    a[0..7]=wOutLSB, 
+    b=true, 
+    out=out
+    );
+
+    // zr, if (out == 0) --> out[15..0] = 0
+    Or8Way(in[7]=wOutSign, in[0..6]=wOutMSB, out=orMSB);
+    Or8Way(in=wOutLSB, out=orLSB);
+    Or(a=orMSB, b=orLSB, out=orOut);
+    Not(in=orOut, out=zr);
+
+    // ng
+    // if (out < 0) --> out[15] = 1 but I cannot isolate it?
+    And(a=wOutSign, b=true, out=ng);
+
+
 }
