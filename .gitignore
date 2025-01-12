@@ -2,3 +2,4 @@ tools/
 .DS_Store
 projects/*/*.out
 projects/*/*/*.out
+The Elements of Computing Systems.pdf
