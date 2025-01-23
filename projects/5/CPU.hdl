@@ -32,5 +32,90 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-	//// Replace this comment with your code.
+	// Instruction
+    // “ixxaccccccdddjjj”
+    // [15]     i: opcode(0:A, 1:C), 
+    // [13..14] xx: not used, 
+    // [12]     a: A or M input, 
+    // [6..11]  cccccc: instruction, 
+    // [3..5]   ddd: dest, 5_d1:A  4_d2:D  3_d3:M  
+    // [0..2]   jjj: jump
+    
+    // instruction[15] = i, determines if instr/address
+    Mux16(a=instruction, b=wOutALU, sel=instruction[15], out=wMuxA);
+
+    // If opcode=0 or dest=A, latch onto Mux
+    Not(in=instruction[15], out=notOpcode);
+    And(a=instruction[15], b=instruction[5], out=wInstrLoadA); // If C-instr and ddd=1--, write A
+    Or(a=notOpcode, b=wInstrLoadA, out=wLoadA);
+    ARegister(in=wMuxA, load=wLoadA, out=wOutA, out[0..14]=addressM);
+    
+    // If C-instr and ddd=-1-, write D
+    And(a=instruction[15], b=instruction[4], out=wInstrLoadD);
+    DRegister(in=wOutALU, load=wInstrLoadD, out=wOutD);
+
+    // If C-instr and ddd=--1, write M
+    And(a=instruction[15], b=instruction[3], out=writeM);
+
+    // instruction[12] = a, determines if D:A/M, 
+    Mux16(a=wOutA, b=inM, sel=instruction[12], out=wOutAM);
+
+    // zr & ng can be used for jumping conditions
+    ALU(x=wOutD, 
+    y=wOutAM, 
+    zx=instruction[11], 
+    nx=instruction[10], 
+    zy=instruction[9], 
+    ny=instruction[8], 
+    f=instruction[7], 
+    no=instruction[6], 
+    out=wOutALU, 
+    out=outM, 
+    zr=wEQ, 
+    ng=wLT);
+
+    // Jump conditions
+    // [0..2]   j1 j2 j3: jump
+    // j1 = out < 0
+    // j2 = out = 0
+    // j3 = out > 0
+    Not(in=wLT, out=wNLT);
+    Not(in=wEQ, out=wNEQ);
+    And(a=wNEQ, b=wNLT, out=wGT);
+    Or(a=wEQ, b=wGT, out=wGE);
+    Or(a=wEQ, b=wLT, out=wLE);
+
+    DMux8Way(in=instruction[15], 
+    sel=instruction[0..2],
+    a=wNull, 
+    b=wJGT, 
+    c=wJEQ, 
+    d=wJGE, 
+    e=wJLT, 
+    f=wJNE, 
+    g=wJLE, 
+    h=wJMP);
+
+    And(a=wGT, b=wJGT, out=wOutJGT);
+    And(a=wEQ, b=wJEQ, out=wOutJEQ);
+    And(a=wGE, b=wJGE, out=wOutJGE);
+    And(a=wLT, b=wJLT, out=wOutJLT);
+    And(a=wNEQ, b=wJNE, out=wOutJNE);
+    And(a=wLE, b=wJLE, out=wOutJLE);
+
+    Or8Way(
+    in[0]=wOutJGT,
+    in[1]=wOutJEQ, 
+    in[2]=wOutJGE,
+    in[3]=wOutJLT,
+    in[4]=wOutJNE,
+    in[5]=wOutJLE,
+    in[6]=wJMP,
+    in[7]=false,
+    out=wOutJUMP);
+
+    Not(in=wOutJUMP, out=wIncrPC);
+
+    PC(in=wOutA, load=wOutJUMP, inc=wIncrPC, reset=reset, out[0..14]=pc);
 }
+
