@@ -114,8 +114,9 @@ CHIP CPU {
     in[7]=false,
     out=wOutJUMP);
 
-    Not(in=wOutJUMP, out=wIncrPC);
 
+    // Program Counter
+    Not(in=wOutJUMP, out=wIncrPC);
     PC(in=wOutA, load=wOutJUMP, inc=wIncrPC, reset=reset, out[0..14]=pc);
 }
 
