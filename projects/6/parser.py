@@ -91,11 +91,18 @@ class Parser:
                 j += 1
                 if letter == '=':
                     comp = self.current_command[j:]
-        return comp
+                    return comp
+        else:
+            for letter in self.current_command:
+                if letter == ';':
+                    comp = self.current_command[:j]
+                    return comp
+                j += 1
+        
 
     def jump(self):
         """Returns the JUMP mnemonic of the C_COMMAND."""
-        jump = None
+        jump = "null"
         j = 0
         if ';' in self.current_command:
             for letter in self.current_command:
