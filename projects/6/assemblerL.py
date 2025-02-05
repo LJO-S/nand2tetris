@@ -1,9 +1,22 @@
 from coder import Code
 from parser import Parser
+import sys
+import os
+
 
 
 if __name__ == "__main__":
-    parser = Parser("pong/pongL.asm")
+    if len(sys.argv) < 2:
+        print("Usage: python main.py [input_dir/input_filename] > [output_filename]")
+        sys.exit(1)
+    # Get filename from cmd line
+    input_filename = sys.argv[1] 
+    # Get current working dir
+    curr_work_dir = os.getcwd()
+    # Construct full path
+    input_path = os.path.join(curr_work_dir, input_filename)
+
+    parser = Parser(input_path)
     coder = Code()
 
     while parser.hasMoreCommands() == True:
