@@ -42,7 +42,7 @@ class SymbolTable:
                 contain_bool = True
         return contain_bool
     
-    def GetAddress(self, symbol: str):
+    def getAddress(self, symbol: str):
         """Returns the {address} bound to {symbol}"""
         return self.hash_table[symbol]
 
