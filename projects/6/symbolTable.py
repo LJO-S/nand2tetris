@@ -31,7 +31,7 @@ class SymbolTable:
     def addEntry(self, symbol: str, address: str):
         """Add key:value pair {symbol}:{address} to
         hash table"""
-        self.hash_table[symbol] = address
+        self.hash_table[(symbol.strip(),)] = address
         return None
 
     def contains(self, symbol: str):
@@ -44,7 +44,11 @@ class SymbolTable:
     
     def getAddress(self, symbol: str):
         """Returns the {address} bound to {symbol}"""
-        return self.hash_table[symbol]
+        for key_group, binary in self.hash_table.items():
+            if symbol.strip() in key_group:
+                return binary
+        return None
+                
 
 
 if __name__ == "__main__":
