@@ -112,6 +112,7 @@ class Parser:
         return jump
 
     def close_input_file(self):
+        """Closes input file"""
         self.file.close()
 
     
