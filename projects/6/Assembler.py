@@ -36,7 +36,7 @@ if __name__ == "__main__":
                 parser_1P.advance()
                 if ((parser_1P.commandType() == "A_COMMAND") or
                     (parser_1P.commandType() == "C_COMMAND")):
-                    # A_COMMAND
+                    # A_COMMAND or C_COMMAND
                     i += 1
                 else:
                     # L_COMMAND
@@ -56,9 +56,10 @@ if __name__ == "__main__":
                         addr = symbolTable.getAddress(parser_2P.symbol())
                         output = "0" + '{0:015b}'.format(int(addr))
                     elif parser_2P.symbol().strip().isdigit():
+                        # This does not need a table since it is just a numeral
                         output = "0" + '{0:015b}'.format(int(parser_2P.symbol()))
                     else:
-                        # First encounter
+                        # First encounter of literal variable
                         symbolTable.addEntry(parser_2P.symbol(), 16+i)
                         output = "0" + '{0:015b}'.format(int(16+i))
                         i += 1

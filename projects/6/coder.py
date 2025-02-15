@@ -37,6 +37,7 @@ class Code:
         pass
     #------------------------------------------------------
     def dest(self, dest_mnemonic):
+        """Returns the dest binary from the mnemonic"""
         dest_binary = ['0','0','0']
         options = ['A', 'D', 'M']
         for ii in range(0,len(options)):
@@ -45,6 +46,7 @@ class Code:
         return ''.join(dest_binary)
     #------------------------------------------------------
     def comp(self, comp_mnemonic):
+        """Returns the comp binary from the mnemonic."""
         comp_binary=[]
         if 'M' in comp_mnemonic:
             # then (a=1)
@@ -61,6 +63,7 @@ class Code:
     #------------------------------------------------------
 
     def jump(self, jump_mnemonic):
+        """Returns the JMP binary from the mnemonic"""
         return self.jmp_dict[jump_mnemonic.strip()]
 
 if __name__ == "__main__":
