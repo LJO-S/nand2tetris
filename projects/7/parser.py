@@ -3,7 +3,6 @@ class Parser:
     def __init__(self, path=None):
         self.file = self.open_input_file(path)
         self.current_command = None
-        self.translation_table = dict.fromkeys(map(ord, " @)("), None)
         self.commandTypeDict = {
             "call": "C_CALL",
             "pop": "C_POP",
@@ -19,6 +18,10 @@ class Parser:
         """Opens the file specified by path"""
         file = open(path, "r")
         return file
+
+    def close_input_file(self):
+        """Closes input file"""
+        self.file.close()
 
     def hasMoreCommands(self):
         """Checks if the current line is EOF or not
@@ -45,15 +48,16 @@ class Parser:
     def commandType(self):
         """Returns which command type the current command
         is."""
-        for key, value in dict.items():
+        for key, value in self.commandTypeDict.items():
             if key in self.current_command:
                 return value
         return "C_ARITHMETIC"
 
     def arg(self, idx: int):
         lst = []
-        for args in self.current_command:
-            lst.append(args)
+        for args in self.current_command.split():
+            if (args != "push") and (args != "pop"):
+                lst.append(args)
         return lst[idx]
 
     def arg1(self):
