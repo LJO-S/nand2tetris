@@ -16,10 +16,12 @@ if __name__ == "__main__":
     curr_work_dir = os.getcwd()
     # Construct full path
     input_path = os.path.join(curr_work_dir, input_filename)
-    output_path = os.path.join(curr_work_dir, "output.asm")
-    # 1st pass
+    outputDir = os.path.dirname(os.path.abspath(input_path)) + "\\"
+
+    print(outputDir)
+
     parser = Parser(input_path)
-    coder = Code(output_path)
+    coder = Code(outputDir + "output.asm")
 
     while parser.hasMoreCommands() == True:
         parser.advance()
@@ -29,10 +31,16 @@ if __name__ == "__main__":
                 parser.arg1(),
                 parser.arg2(),
             )
+        elif parser.commandType() == "C_POP":
+            coder.writePushPop(
+                "C_POP",
+                parser.arg1(),
+                parser.arg2(),
+            )
         elif parser.commandType() == "C_ARITHMETIC":
             coder.writeArithmetic(parser.arg1())
         else:
-            print("Unexpected commandType at this stage!!")
+            print("Unexpected commandType at this stage!!" + parser.commandType())
 
     parser.close_input_file()
     coder.close()
