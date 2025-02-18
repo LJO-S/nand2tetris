@@ -1,7 +1,7 @@
 tools/
 .DS_Store
 projects/**/*.out
-projects/*/*/*.out
 projects/**/*.hack
 projects/**/__pycache__
+projects/7/**/*.asm
 The Elements of Computing Systems.pdf
