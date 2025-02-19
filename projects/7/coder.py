@@ -25,9 +25,9 @@
 # 2048-16483: heap
 
 # TODO list
-# 1. Replace all self.sp with actual @SP operations
-# 2. Fix main.py to actually output files with the directory name
-#
+# 1. Fix pointer
+# 2. Fix static
+# 3. Handle multiple .vm files
 #
 
 
@@ -64,31 +64,40 @@ class Code:
         if command == "add":
             self.file.write("// add" + "\n")
             self.sp_decr()
-            self.file.write("@" + str(self.sp) + "\n" + "D=M" + "\n")
-            self.file.write("@" + str(self.sp - 1) + "\n" + "M=M+D" + "\n")
+            self.get_sp(0)
+            self.file.write("D=M" + "\n")
+            self.get_sp(-1)
+            self.file.write("M=M+D" + "\n")
         elif command == "sub":
             self.file.write("// sub" + "\n")
             self.sp_decr()
-            self.file.write("@" + str(self.sp) + "\n" + "D=M" + "\n")
-            self.file.write("@" + str(self.sp - 1) + "\n" + "M=M-D" + "\n")
+            self.get_sp(0)
+            self.file.write("D=M" + "\n")
+            self.get_sp(-1)
+            self.file.write("M=M-D" + "\n")
         elif command == "neg":
             # -y
             self.file.write("// NEG " + "\n")
-            self.file.write("@" + str(self.sp - 1) + "\n" + "M=-M" + "\n")
+            self.get_sp(-1)
+            self.file.write("M=-M" + "\n")
         elif command == "eq":
             # x = y
             self.file.write("// X = Y" + "\n")
             self.sp_decr()
             # {fill with false} @skip_x_True 0;JMP
-            self.file.write("@" + str(self.sp) + "\n" + "D=M" + "\n")
-            self.file.write("@" + str(self.sp - 1) + "\n" + "D=D-M" + "\n")
+            self.get_sp(0)
+            self.file.write("D=M" + "\n")
+            self.get_sp(-1)
+            self.file.write("D=D-M" + "\n")
             self.file.write("@x_True." + str(self.i) + "\n" + "D;JEQ" + "\n")
             # false
-            self.file.write("@" + str(self.sp - 1) + "\n" + "M=0" + "\n")
+            self.get_sp(-1)
+            self.file.write("M=0" + "\n")
             self.file.write("@cont." + str(self.i) + "\n" + "0;JMP" + "\n")
             # true
             self.file.write("(x_True." + str(self.i) + ")" + "\n")
-            self.file.write("@" + str(self.sp - 1) + "\n" + "M=-1" + "\n")
+            self.get_sp(-1)
+            self.file.write("M=-1" + "\n")
             # continue
             self.file.write("(cont." + str(self.i) + ")" + "\n")
             # incr internal label counter
@@ -98,15 +107,19 @@ class Code:
             self.file.write("// X > Y" + "\n")
             self.sp_decr()
             # {fill with false} @skip_x_True 0;JMP
-            self.file.write("@" + str(self.sp) + "\n" + "D=M" + "\n")
-            self.file.write("@" + str(self.sp - 1) + "\n" + "D=D-M" + "\n")
+            self.get_sp(0)
+            self.file.write("D=M" + "\n")
+            self.get_sp(-1)
+            self.file.write("D=D-M" + "\n")
             self.file.write("@x_True." + str(self.i) + "\n" + "D;JLT" + "\n")
             # false
-            self.file.write("@" + str(self.sp - 1) + "\n" + "M=0" + "\n")
+            self.get_sp(-1)
+            self.file.write("M=0" + "\n")
             self.file.write("@cont." + str(self.i) + "\n" + "0;JMP" + "\n")
             # true
             self.file.write("(x_True." + str(self.i) + ")" + "\n")
-            self.file.write("@" + str(self.sp - 1) + "\n" + "M=-1" + "\n")
+            self.get_sp(-1)
+            self.file.write("M=-1" + "\n")
             # continue
             self.file.write("(cont." + str(self.i) + ")" + "\n")
             # incr internal label counter
@@ -116,15 +129,19 @@ class Code:
             self.file.write("// X < Y" + "\n")
             self.sp_decr()
             # {fill with false} @skip_x_True 0;JMP
-            self.file.write("@" + str(self.sp) + "\n" + "D=M" + "\n")
-            self.file.write("@" + str(self.sp - 1) + "\n" + "D=D-M" + "\n")
+            self.get_sp(0)
+            self.file.write("D=M" + "\n")
+            self.get_sp(-1)
+            self.file.write("D=D-M" + "\n")
             self.file.write("@x_True." + str(self.i) + "\n" + "D;JGT" + "\n")
             # false
-            self.file.write("@" + str(self.sp - 1) + "\n" + "M=0" + "\n")
+            self.get_sp(-1)
+            self.file.write("M=0" + "\n")
             self.file.write("@cont." + str(self.i) + "\n" + "0;JMP" + "\n")
             # true
             self.file.write("(x_True." + str(self.i) + ")" + "\n")
-            self.file.write("@" + str(self.sp - 1) + "\n" + "M=-1" + "\n")
+            self.get_sp(-1)
+            self.file.write("M=-1" + "\n")
             # continue
             self.file.write("(cont." + str(self.i) + ")" + "\n")
             # incr internal label counter
@@ -134,21 +151,26 @@ class Code:
             self.file.write("// x & y" + "\n")
             self.sp_decr()
             # acquire Y
-            self.file.write("@" + str(self.sp) + "\n" + "D=M" + "\n")
+            self.get_sp(0)
+            self.file.write("D=M" + "\n")
             # & operation on X
-            self.file.write("@" + str(self.sp - 1) + "\n" + "M=D&M" + "\n")
+            self.get_sp(-1)
+            self.file.write("M=D&M" + "\n")
         elif command == "or":
             # x Or y
             self.sp_decr()
             self.file.write("// x | y" + "\n")
             # acquire Y
-            self.file.write("@" + str(self.sp) + "\n" + "D=M" + "\n")
+            self.get_sp(0)
+            self.file.write("D=M" + "\n")
             # | operation on X
-            self.file.write("@" + str(self.sp - 1) + "\n" + "M=D|M" + "\n")
+            self.get_sp(-1)
+            self.file.write("M=D|M" + "\n")
         else:
             # Not y
             self.file.write("// !Y" + "\n")
-            self.file.write("@" + str(self.sp - 1) + "\n" + "M=!M" + "\n")
+            self.get_sp(-1)
+            self.file.write("M=!M" + "\n")
 
     def writePushPop(self, command: str, segment: str, index: int):
         if command == "C_PUSH":
@@ -175,12 +197,14 @@ class Code:
                 for _ in range(int(index)):
                     self.file.write("A=A+1" + "\n")
                 self.file.write("D=M" + "\n")
-            self.file.write("@" + str(self.sp) + "\n" + "M=D" + "\n")
+            self.get_sp(0)
+            self.file.write("M=D" + "\n")
             self.sp_incr()
 
         elif command == "C_POP":
             self.file.write("// pop " + str(segment) + " " + str(index) + "\n")
-            self.file.write("@" + str(self.sp - 1) + "\n" + "D=M" + "\n")
+            self.get_sp(-1)
+            self.file.write("D=M" + "\n")
             if segment == "temp":
                 self.file.write("@R" + str(5 + int(index)) + "\n")
             else:
@@ -215,10 +239,14 @@ class Code:
         self.sp -= 1
         self.file.write("@SP" + "\n" + "M=M-1" + "\n")
 
-    def sp_write(self):
-        """SP INCR/DECR helper function"""
-        self.file.write("@" + str(self.sp) + "\n" + "D=A" + "\n")
-        self.file.write("@SP" + "\n" + "M=D" + "\n")
+    def get_sp(self, index):
+        self.file.write("@SP" + "\n" + "A=M" + "\n")
+        if index < 0:
+            for _ in range(abs(index)):
+                self.file.write("A=A-1" + "\n")
+        else:
+            for _ in range(index):
+                self.file.write("A=A+1" + "\n")
 
     def close(self):
         """Closes output file"""
