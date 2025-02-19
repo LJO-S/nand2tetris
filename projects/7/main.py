@@ -1,27 +1,21 @@
 from coder import Code
 from parser import Parser
 import sys
-import os
-
-# TODO:
-# maybe a Parser for each file in a directory
+from pathlib import Path
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python main.py [input_dir/input_filename] > [output_filename]")
         sys.exit(1)
     # Get filename from cmd line
-    input_filename = sys.argv[1]
-    # Get current working dir
-    curr_work_dir = os.getcwd()
-    # Construct full path
-    input_path = os.path.join(curr_work_dir, input_filename)
-    outputDir = os.path.dirname(os.path.abspath(input_path)) + "\\"
-
-    print(outputDir)
+    input_path = sys.argv[1]
+    input_path = Path(input_path)
+    output_dir = input_path.parent
+    output_name = output_dir.name
+    output_file = str(output_dir) + "/" + f"{output_name}.asm"
 
     parser = Parser(input_path)
-    coder = Code(outputDir + "output.asm")
+    coder = Code(output_file)
 
     while parser.hasMoreCommands() == True:
         parser.advance()
