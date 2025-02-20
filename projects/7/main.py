@@ -16,6 +16,7 @@ if __name__ == "__main__":
 
     parser = Parser(input_path)
     coder = Code(output_file)
+    coder.setFileName(output_name)
 
     while parser.hasMoreCommands() == True:
         parser.advance()
