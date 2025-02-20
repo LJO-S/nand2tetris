@@ -25,8 +25,6 @@
 # 2048-16483: heap
 
 # TODO list
-# 1. Fix pointer
-# 2. Fix static
 # 3. Handle multiple .vm files
 #
 
@@ -47,11 +45,7 @@ class Code:
 
     def setFileName(self, fileName: str):
         # Should reset accordingly
-
-        # varje fil ska ha en egen static
-        # en variable i en fil kan då få namnet fileName.variable till @
         self.fileName = fileName
-        pass
 
     def writeArithmetic(self, command: str):
         """Returns the .asm code corresponding
@@ -180,6 +174,17 @@ class Code:
             elif segment == "temp":
                 self.file.write("@R" + str(5 + int(index)) + "\n")
                 self.file.write("D=M" + "\n")
+            elif segment == "pointer":
+                if int(index) == 0:
+                    self.file.write("@THIS" + "\n")
+                elif int(index) == 1:
+                    self.file.write("@THAT" + "\n")
+                else:
+                    raise Exception("Invalid pointer index: " + str(index))
+                self.file.write("D=M" + "\n")
+            elif segment == "static":
+                self.file.write("@" + self.fileName + "." + str(index) + "\n")
+                self.file.write("D=M" + "\n")
             else:
                 if segment == "argument":
                     self.file.write("@ARG" + "\n")
@@ -189,8 +194,6 @@ class Code:
                     self.file.write("@THAT" + "\n")
                 elif segment == "local":
                     self.file.write("@LCL" + "\n")
-                elif segment == "pointer":
-                    pass  # TODO
                 else:
                     raise Exception("Somehow C_PUSH but unknown segment")
                 self.file.write("A=M" + "\n")
@@ -207,6 +210,15 @@ class Code:
             self.file.write("D=M" + "\n")
             if segment == "temp":
                 self.file.write("@R" + str(5 + int(index)) + "\n")
+            elif segment == "pointer":
+                if int(index) == 0:
+                    self.file.write("@THIS" + "\n")
+                elif int(index) == 1:
+                    self.file.write("@THAT" + "\n")
+                else:
+                    raise Exception("Invalid pointer index: " + str(index))
+            elif segment == "static":
+                self.file.write("@" + self.fileName + "." + str(index) + "\n")
             else:
                 if segment == "local":
                     self.file.write("@LCL" + "\n")
@@ -216,8 +228,6 @@ class Code:
                     self.file.write("@THIS" + "\n")
                 elif segment == "that":
                     self.file.write("@THAT" + "\n")
-                elif segment == "static":
-                    pass  # TODO
                 else:
                     raise Exception("ERROR: somehow C_POP but unknown segment")
                 self.file.write("A=M" + "\n")
