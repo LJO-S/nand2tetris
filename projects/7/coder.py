@@ -1,32 +1,11 @@
-# börja med StackArithmetic
-#
-# PUSH
-# stack[sp] = x
-# sp += 1
-
-# push "segment" "idx" trycker segment[idx] upp på stacken
-
-# POP
-# sp -= 1
-# x = stack[sp]
-
-# pop "segment" "idx" tar översta stackvärdet och storar i segment[idx]
-
 # True = -1 = 0xFFFF
 # False = 0 = 0x0000
-
-# Lägg tid på att fatta hur fan man i .asm
-# skapar add, sub, neg, eq, gt, lt, and, or, not
 
 # RAM usage
 # 0: SP, 1: LOCAL base pntr, 2: ARG base pntr, 3: THIS base pntr, 4: THAT base pntr, 5-12: temp, 13-15: null
 # 16-255: static
 # 256-2047: STACK
 # 2048-16483: heap
-
-# TODO list
-# 3. Handle multiple .vm files
-#
 
 
 class Code:
