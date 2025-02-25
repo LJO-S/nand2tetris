@@ -16,6 +16,7 @@ class Code:
         self.sp = 256
         self.fileName = None
         self.i = 0  # iterator
+        self.call_iterator = 0
 
     def open_output_file(self, path: str):
         """Opens the file specified by path"""
@@ -229,6 +230,7 @@ class Code:
         self.file.write("@SP" + "\n" + "M=M-1" + "\n")
 
     def get_sp(self, index):
+        """Get current SP"""
         self.file.write("@SP" + "\n" + "A=M" + "\n")
         if index < 0:
             for _ in range(abs(index)):
@@ -240,6 +242,77 @@ class Code:
     def close(self):
         """Closes output file"""
         self.file.close()
+
+    def writeInit(self):
+        """Writes SP = 256"""
+        self.file.write("@SP" + "\n" + "D=256" + "\n")
+
+    def writeLabel(self, label: str):
+        """Writes a label"""
+        self.file.write(f"({label})" + "\n")
+
+    def writeGoto(self, label: str):
+        """Writes an unconditional JMP command"""
+        self.file.write(f"@{label}" + "\n" + "0;JMP" + "\n")
+
+    def writeIf(self, label: str):
+        """Writes a conditional JMP command by
+        checking the last stack value pushed.
+        0x0000 = False , 0xFFFF = True"""
+        self.get_sp(-1)  # Get last value of SP
+        self.file.write(f"@{label}" + "\n")
+        self.file.write(f"D;JNE" + "\n")  # execute if D != 0
+
+    def writeCall(self, functionName: str, numArgs: int):
+        # We need to maintain Global Stack structure when calling function:
+
+        # 1. push return-address
+        # 2. push LCL
+        # 3. push ARG
+        # 4. push THIS
+        # 5. push THAT
+        # 6. ARG = SP-n-5 (-5 due to pushing saved state of caller)
+        # 7. LCL = SP
+        # 8. goto f
+        # 9. (return-address)
+
+        # Save state of caller
+        for loc in ["RETURN_ADDR_CALL", "LCL", "ARG", "THIS", "THAT"]:
+            if loc == "RETURN_ADDR_CALL":
+                self.file.write(f"@{loc}.{self.call_iterator}" + "\n")
+                self.file.write("D=A" + "\n")
+            else:
+                self.file.write(f"@{loc}" + "\n" + "D=M" + "\n")
+            self.get_sp(0)
+            self.file.write("M=D" + "\n")
+            self.sp_incr()
+
+        # reposition ARG
+        self.file.write("@SP" + "\n" + "D=M" + "\n")
+        self.file.write("@ARG" + "\n" + "M=D" + "\n")
+        for _ in range(numArgs + 5):  # +5 due to 5 pushes of saved caller state
+            self.file.write("A=A-1" + "\n")
+
+        # reposition LCL
+        self.file.write("@SP" + "\n" + "D=M" + "\n")
+        self.file.write("@LCL" + "\n" + "M=D" + "\n")
+
+        # transfer ctrl (goto f, unconditionally)
+        self.writeGoto(functionName)
+
+        # Declare label for return-address??
+        self.writeLabel("RETURN_ADDR_CALL." + str(self.call_iterator))
+
+        # Increment whenever this function is called upon
+        self.call_iterator += 1
+
+    def writeReturn(self):
+        # oof
+        pass
+
+    def writeFunction(self, functionName: str, numLocals: int):
+        # TODO: use self.filename to name shit
+        pass
 
 
 if __name__ == "__main__":
