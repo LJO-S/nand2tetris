@@ -265,7 +265,6 @@ class Code:
 
     def writeCall(self, functionName: str, numArgs: int):
         # We need to maintain Global Stack structure when calling function:
-
         # 1. push return-address
         # 2. push LCL
         # 3. push ARG
@@ -278,11 +277,20 @@ class Code:
 
         # Save state of caller
         for loc in ["RETURN_ADDR_CALL", "LCL", "ARG", "THIS", "THAT"]:
+            # This one is non-intuitive:
+            # 1. By creating a unique ptr, we assign it a space in RAM
+            # 2. We push the ptr's unique address to stack
+            # 3. Further down, we create a label with same unique ptr
+            # 4. When later popping unique ptr address and @'ing it, we
+            #    will not arrive at the RAM addr but instead load the PC
+            #    with the instruction addr that the label represents
+            #    This is thanks to how the Assembler handles labels, by
+            #    doing two passes over the .asm file looking for labels.
             if loc == "RETURN_ADDR_CALL":
                 self.file.write(f"@{loc}.{self.call_iterator}" + "\n")
                 self.file.write("D=A" + "\n")
             else:
-                self.file.write(f"@{loc}" + "\n" + "D=M" + "\n")
+                self.file.write("@" + loc + "\n" + "D=M" + "\n")
             self.get_sp(0)
             self.file.write("M=D" + "\n")
             self.sp_incr()
@@ -307,12 +315,50 @@ class Code:
         self.call_iterator += 1
 
     def writeReturn(self):
-        # oof
-        pass
+        # Need to restore state of caller
+        # 1. FRAME = LCL
+        # 2. RET = *(FRAME-5)
+        # 3. *ARG = pop()
+        # 4. SP = ARG+1
+        # 5. THAT = *(FRAME-1)
+        # 5. THIS = *(FRAME-2)
+        # 5. ARG = *(FRAME-3)
+        # 5. LCL = *(FRAME-4)
+        # 5. goto RET
+
+        # Store LCL in temp segment
+        self.file.write("@LCL" + "\n" + "D=M" + "\n")
+        self.file.write("@R5" + "\n" + "M=D" + "\n")
+
+        # Store return-address in temp var
+        for _ in range(5):
+            self.file.write("D=D-1" + "\n")
+        self.file.write("@R6" + "\n" + "M=D" + "\n")
+
+        # Head to *ARG and pop() the stack
+        self.writePushPop("C_POP", "argument", 0)
+
+        # Restore SP
+        self.file.write("@ARG" + "\n" + "D=M+1" + "\n")
+        self.file.write("@SP" + "\n" + "M=D" + "\n")
+
+        self.file.write("@R5" + "\n" + "D=M" + "\n")
+        for loc in ["THAT", "THIS", "ARG", "LCL"]:
+            self.file.write("D=D-1" + "\n")
+            self.file.write("@" + loc + "\n" + "M=D" + "\n")
+
+        # Goto return-address (stored in @R6)
+        self.file.write("@R6" + "\n" + "A=M" + "\n")
+        self.file.write("0;JMP" + "\n")
 
     def writeFunction(self, functionName: str, numLocals: int):
-        # TODO: use self.filename to name shit
-        pass
+        # Write (f)
+        self.writeLabel(functionName)
+
+        # LCL is already repositioned to curr SP, so...
+        # ...push 0s onto the stack
+        for _ in range(numLocals):
+            self.writePushPop("C_PUSH", "constant", 0)
 
 
 if __name__ == "__main__":
