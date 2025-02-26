@@ -5,6 +5,9 @@ from pathlib import Path
 
 
 def parserCoder(parser: Parser, coder: Code):
+    # TODO: add support for rest of C_... commands
+
+    # TODO: in label, check if we're in a function. If so, see functionName$label
     while parser.hasMoreCommands() == True:
         parser.advance()
         if parser.commandType() == "C_PUSH":
@@ -47,6 +50,8 @@ if __name__ == "__main__":
         coder.close()
     else:
         # Directory (multiple files)
+        # TODO: need to write [sys.vm --> .asm] to the first lines
+        # in output!!!!!!!
         output_dir = input_path
         output_name = output_dir.name
         output_file = str(output_dir) + "/" + f"{output_name}.asm"
