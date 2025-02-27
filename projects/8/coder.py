@@ -260,6 +260,7 @@ class Code:
         checking the last stack value pushed.
         0x0000 = False , 0xFFFF = True"""
         self.get_sp(-1)  # Get last value of SP
+        self.file.write("D=M" + "\n")
         self.file.write(f"@{label}" + "\n")
         self.file.write(f"D;JNE" + "\n")  # execute if D != 0
 
