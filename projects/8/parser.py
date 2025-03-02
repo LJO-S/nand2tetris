@@ -8,8 +8,8 @@ class Parser:
             "pop": "C_POP",
             "push": "C_PUSH",
             "label": "C_LABEL",
-            "goto": "C_GOTO",
             "if-goto": "C_IF",
+            "goto": "C_GOTO",
             "function": "C_FUNCTION",
             "return": "C_RETURN",
         }
