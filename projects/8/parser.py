@@ -56,7 +56,8 @@ class Parser:
     def arg(self, idx: int):
         lst = []
         for args in self.current_command.split():
-            if (args != "push") and (args != "pop"):
+            # Only append args not part of the command type
+            if args not in self.commandTypeDict:
                 lst.append(args)
         return lst[idx]
 
