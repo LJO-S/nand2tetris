@@ -243,28 +243,43 @@ class Code:
         """Closes output file"""
         self.file.close()
 
-    def writeInit(self):
-        """Writes SP = 256"""
-        self.file.write("@SP" + "\n" + "D=256" + "\n")
+    def writeInit(self, sysExist: bool):
+        """Writes SP = 256 and calls Sys.init"""
+        self.file.write("// init" + "\n")
+        self.file.write("@256" + "\n" + "D=A" + "\n")
+        self.file.write("@SP" + "\n" + "M=D" + "\n")
+        # We don't really need to "call sys.init", do we?
+        # We could do an unconditional JMP to Sys.init
+        if sysExist == True:
+            self.writeGoto("Sys.init")
 
     def writeLabel(self, label: str):
         """Writes a label"""
+        self.file.write("// label" + "\n")
         self.file.write(f"({label})" + "\n")
 
     def writeGoto(self, label: str):
         """Writes an unconditional JMP command"""
+        self.file.write("// goto" + "\n")
         self.file.write(f"@{label}" + "\n" + "0;JMP" + "\n")
 
     def writeIf(self, label: str):
         """Writes a conditional JMP command by
         checking the last stack value pushed.
         0x0000 = False , 0xFFFF = True"""
-        self.get_sp(-1)  # Get last value of SP
+        self.file.write("// if-goto" + "\n")
+        # Remember that if-goto pops the top-stack value
+        self.sp_decr()
+        # Get the prev pushed value on stack
+        self.get_sp(0)
         self.file.write("D=M" + "\n")
         self.file.write(f"@{label}" + "\n")
-        self.file.write(f"D;JNE" + "\n")  # execute if D != 0
+        self.file.write(f"D;JNE" + "\n")  # execute if D > 0
 
     def writeCall(self, functionName: str, numArgs: int):
+        """Writes .asm effecting a call command, maintaining
+        the global stack structure by saving state of caller
+        and going to function"""
         # We need to maintain Global Stack structure when calling function:
         # 1. push return-address
         # 2. push LCL
@@ -275,6 +290,8 @@ class Code:
         # 7. LCL = SP
         # 8. goto f
         # 9. (return-address)
+
+        self.file.write("// call" + "\n")
 
         # Save state of caller
         for loc in ["RETURN_ADDR_CALL", "LCL", "ARG", "THIS", "THAT"]:
@@ -316,6 +333,10 @@ class Code:
         self.call_iterator += 1
 
     def writeReturn(self):
+        # TODO: needs work
+        """Writes a function return procedure. Restores
+        state of caller by repositioning multiple pointers
+        and SP."""
         # Need to restore state of caller
         # 1. FRAME = LCL
         # 2. RET = *(FRAME-5)
@@ -326,6 +347,8 @@ class Code:
         # 5. ARG = *(FRAME-3)
         # 5. LCL = *(FRAME-4)
         # 5. goto RET
+
+        self.file.write("// return" + "\n")
 
         # Store LCL in temp segment
         self.file.write("@LCL" + "\n" + "D=M" + "\n")
@@ -353,11 +376,16 @@ class Code:
         self.file.write("0;JMP" + "\n")
 
     def writeFunction(self, functionName: str, numLocals: int):
+        """Writes a function definition"""
+
+        self.file.write("// function" + "\n")
+
         # Write (f)
         self.writeLabel(functionName)
 
         # LCL is already repositioned to curr SP, so...
         # ...push 0s onto the stack
+        self.file.write("// pushing " + str(numLocals) + " zeros onto stack" + "\n")
         for _ in range(numLocals):
             self.writePushPop("C_PUSH", "constant", 0)
 
