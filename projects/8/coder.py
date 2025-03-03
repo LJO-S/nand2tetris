@@ -317,7 +317,7 @@ class Code:
         self.file.write("@SP" + "\n" + "D=M" + "\n")
         self.file.write("@ARG" + "\n" + "M=D" + "\n")
         for _ in range(numArgs + 5):  # +5 due to 5 pushes of saved caller state
-            self.file.write("A=A-1" + "\n")
+            self.file.write("A=A-1" + "\n")  # TODO: what the hell?
 
         # reposition LCL
         self.file.write("@SP" + "\n" + "D=M" + "\n")
@@ -392,6 +392,7 @@ class Code:
         self.file.write("// pushing " + str(numLocals) + " zeros onto stack" + "\n")
         for _ in range(numLocals):
             self.writePushPop("C_PUSH", "constant", 0)
+        self.file.write("// function finished " + "\n")
 
 
 if __name__ == "__main__":
