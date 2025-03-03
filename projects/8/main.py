@@ -51,8 +51,6 @@ def parserCoder(parser: Parser, coder: Code):
 
         else:
             print("Unexpected commandType at this stage!!" + parser.commandType())
-    parser.close_input_file()
-    coder.close()
 
 
 if __name__ == "__main__":
@@ -66,9 +64,10 @@ if __name__ == "__main__":
     output_dir = input_path
     output_name = output_dir.name
     output_file = str(output_dir) + "/" + f"{output_name}.asm"
+    sysvm_file = output_dir / "Sys.vm"
     coder = Code(output_file)
     if not "SimpleFunction" in output_name:
-        if "Sys.vm" in input_path.glob("*.vm"):
+        if sysvm_file.exists():
             coder.writeInit(True)
         else:
             coder.writeInit(False)
