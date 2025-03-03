@@ -333,7 +333,6 @@ class Code:
         self.call_iterator += 1
 
     def writeReturn(self):
-        # TODO: needs work
         """Writes a function return procedure. Restores
         state of caller by repositioning multiple pointers
         and SP."""
@@ -352,12 +351,13 @@ class Code:
 
         # Store LCL in temp segment
         self.file.write("@LCL" + "\n" + "D=M" + "\n")
-        self.file.write("@R5" + "\n" + "M=D" + "\n")
+        self.file.write("@R13" + "\n" + "M=D" + "\n")
 
         # Store return-address in temp var
         for _ in range(5):
             self.file.write("D=D-1" + "\n")
-        self.file.write("@R6" + "\n" + "M=D" + "\n")
+        self.file.write("A=D" + "\n" + "D=M" + "\n")
+        self.file.write("@R14" + "\n" + "M=D" + "\n")
 
         # Head to *ARG and pop() the stack
         self.writePushPop("C_POP", "argument", 0)
@@ -366,13 +366,17 @@ class Code:
         self.file.write("@ARG" + "\n" + "D=M+1" + "\n")
         self.file.write("@SP" + "\n" + "M=D" + "\n")
 
-        self.file.write("@R5" + "\n" + "D=M" + "\n")
+        ii = 1
         for loc in ["THAT", "THIS", "ARG", "LCL"]:
-            self.file.write("D=D-1" + "\n")
+            self.file.write("@R13" + "\n" + "A=M" + "\n")
+            for _ in range(ii):
+                self.file.write("A=A-1" + "\n")
+            self.file.write("D=M" + "\n")
             self.file.write("@" + loc + "\n" + "M=D" + "\n")
+            ii += 1
 
-        # Goto return-address (stored in @R6)
-        self.file.write("@R6" + "\n" + "A=M" + "\n")
+        # Goto return-address (stored in @R14)
+        self.file.write("@R14" + "\n" + "A=M" + "\n")
         self.file.write("0;JMP" + "\n")
 
     def writeFunction(self, functionName: str, numLocals: int):
