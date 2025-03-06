@@ -48,9 +48,9 @@ class Parser:
     def commandType(self):
         """Returns which command type the current command
         is."""
-        for key, value in self.commandTypeDict.items():
-            if key in self.current_command:
-                return value
+        first_word = self.current_command.split()[0]
+        if first_word in self.commandTypeDict:
+            return self.commandTypeDict[first_word]
         return "C_ARITHMETIC"
 
     def arg(self, idx: int):
