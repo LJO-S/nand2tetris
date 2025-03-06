@@ -66,7 +66,7 @@ if __name__ == "__main__":
     output_file = str(output_dir) + "/" + f"{output_name}.asm"
     sysvm_file = output_dir / "Sys.vm"
     coder = Code(output_file)
-    if (not "SimpleFunction" in output_name) and (not "NestedCall" in output_name):
+    if not "SimpleFunction" in output_name:
         if sysvm_file.exists():
             coder.writeInit(True)
         else:
