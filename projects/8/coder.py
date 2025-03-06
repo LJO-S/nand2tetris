@@ -245,13 +245,12 @@ class Code:
 
     def writeInit(self, sysExist: bool):
         """Writes SP = 256 and calls Sys.init"""
-        self.file.write("// init" + "\n")
+
+        self.file.write("// init: set SP" + "\n")
         self.file.write("@256" + "\n" + "D=A" + "\n")
         self.file.write("@SP" + "\n" + "M=D" + "\n")
-        # We don't really need to "call sys.init", do we?
-        # We could do an unconditional JMP to Sys.init
         if sysExist == True:
-            self.writeGoto("Sys.init")
+            self.writeCall("Sys.init", 0)
 
     def writeLabel(self, label: str):
         """Writes a label"""
