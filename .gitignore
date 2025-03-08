@@ -4,4 +4,6 @@ projects/**/*.out
 projects/**/*.hack
 projects/**/__pycache__
 projects/7/**/*.asm
+projects/8/**/*.asm
+projects/8/**/*.out
 The Elements of Computing Systems.pdf
