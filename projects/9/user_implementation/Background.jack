@@ -1,0 +1,48 @@
+
+
+/**        
+* This is the background generator for the UbootGame
+*/
+
+/* TODO:
+* 
+*
+*/
+
+class Background {
+    field int Y_top_bndry, Y_bot_bndry;
+
+    constructor Background new() {
+        // Y-position of top and bottom bndry
+        let Y_top_bndry = 23;
+        let Y_bot_bndry = 26;
+        // Draws the boundary without any offset
+        do draw(Y_top_bndry, Y_bot_bndry);
+        return this;
+    }
+
+    /** Deallocate this object */ 
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    /** Returns top boundary */
+    method int getTop() {
+        return 0 + (Y_top_bndry*32);
+    }
+
+    /** Returns bottom boundary */
+    method int getBot() {
+        return (255 - Y_bot_bndry)*32;
+    }
+
+    /** Draws the boundary */
+	method void draw(int Y_top_bndry, int Y_bot_bndry) {
+		// Upper boundary
+		do Screen.drawRectangle(0,0, 511, 0 + Y_top_bndry);
+		// Lower boundary
+		do Screen.drawRectangle(0,255-Y_bot_bndry, 511, 255);
+		return;
+	}
+}

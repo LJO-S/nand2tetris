@@ -1,0 +1,14 @@
+/**
+ * Main class of the UbootGame.
+ */
+class Main {
+    /** Initializes a UbootGame and starts running it. */
+    function void main() {
+        var UbootGame game;
+        do UbootGame.newInstance();
+        let game = UbootGame.getInstance();
+        do game.run();
+        do game.dispose();
+        return;
+    }
+}

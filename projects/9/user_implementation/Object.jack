@@ -1,0 +1,11 @@
+
+
+
+class Object {
+
+    constructor Object new() {
+        return this;
+    }
+
+
+}
