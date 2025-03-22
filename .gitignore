@@ -6,4 +6,5 @@ projects/**/__pycache__
 projects/7/**/*.asm
 projects/8/**/*.asm
 projects/8/**/*.out
+projects/9/**/*.vm
 The Elements of Computing Systems.pdf
