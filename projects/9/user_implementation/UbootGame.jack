@@ -17,6 +17,12 @@ class UbootGame {
         return this;
     }
 
+    // TODO: we need a Torpedo generator here
+    // generate at right X-limit and at random Y-coord within boundaries
+    // maybe do some mathematical magic?
+
+    // TODO: we also need a torpedo de-generator here (hide and disposes at left X-limit)
+
     /** Deallocates the object's memory. */
     method void dispose() {
         do background.dispose();
@@ -36,57 +42,59 @@ class UbootGame {
         return instance;
     }
 
+    method void generateTorpedo () {
+        
+    }
+
+
     /** Starts the game, and handles inputs from the user that control
      *  the sub's movement direction. */
     method void run() {
         var char key;
+        var boolean torpedoOOB;
 
         while (~exit) {
             // waits for a key to be pressed (key = 0 is default non-press)
+            // TODO: fix this? Could increase the wait-counter and skip the while conditions totally
             while ((key = 0) & (~exit)) {
                 let key = Keyboard.keyPressed();
                 do Sys.wait(50);
             }
-            //// key = 130 is left-arrow
-            //if (key = 130) { 
-            //    do sub.hide();
-            //    do Sys.wait(50); 
-            //}
-	        //else {
-            //    // key = 132 is right-arrow
-	        //    if (key = 132) { 
-            //        do sub.show();
-            //        do Sys.wait(50);
-            //    }
-		    //    else {
-            //        // key = 130 is escape
-            //        if (key = 140) { 
-            //            let exit = true; 
-            //        }
-		    //    }
-            //}
+            // -------------------------------------------------
+            // TODO: Check for collisions
+            // How?
+            // We know how to calculate when torpedo is @ X-limit.
+            // Then we just check if @ X-limit and Y_sub_top <= Y_torp <= Y_sub_bot
+            // If true, then collision, set exit to TRUE!!
+            let exit = Torpedo.collision(sub.getTop(), sub.getBot());
 
+            // -------------------------------------------------
+            // Torpedo movement and collision check
+            torpedoOOB = Torp.move();
+            if (~(torpedoOOB)) {
+                // Torpedo has hit X-limit and is out-of-bounds
+                // GENERATE NEW TORPEDO
+            }
+            else {
+                let exit = Torpedo.collision(sub.getTop(), sub.getBot()); 
+            }
+            // -------------------------------------------------
+            // Key press parsing
             if (key = 131) { 
                 do sub.move(1);
-                //do Sys.wait(50); 
             } 
 	        if (key = 133) { 
                 do sub.move(0);
-                //do Sys.wait(50);
             }
             // key = 130 is escape
             if (key = 140) { 
                 let exit = true; 
             }
 
-            
-
 
             // Waits for the key to be released.
             while ((~(key = 0)) & (~exit)) {
                 let key = Keyboard.keyPressed();
-                //do bat.move();
-                //do moveBall();
                 do Sys.wait(50);
             }
         }

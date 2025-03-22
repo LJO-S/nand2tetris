@@ -7,10 +7,6 @@
 *	 - Y_top & Y_top positions
 */
 
-// TODO:
-// - Correct values for Y_top & Y_bot
-
-
 class Sub {
 
 	field int Y_top, Y_bot;

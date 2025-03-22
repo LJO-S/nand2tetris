@@ -1,0 +1,111 @@
+
+
+/**  
+*	 A graphical torpedo. 
+*	 From this we get:
+*	 - Graphical display
+*	 - Y_top & Y_top positions
+*/
+
+
+class Torpedo {
+
+    field int torpedo_mem_addr;
+    field int mem_start_pos;
+
+    constructor Object new(int start_pos) {
+        // This is only set here, never to be touched again
+        let mem_start_pos = start_pos;
+
+        return this;
+    }
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method boolean move() {
+        // We can only move one direction, i.e. left
+        
+        // Check if @ X-boundary. How??
+        // We know that location+32 will yield the next row.
+        // Thus, we can assert that we never move out of [0,32).
+        // In other words, if we start at X, we must end up at X-32.
+        // When we have done that, we will have traversed a full row
+        // We can therefore save a Y_START_POS, and just check if
+        // we are @ Y_START_POS - 32
+
+        // TODO: this fucker must be fine-tuned depending on where
+        // the sprite is instantiated (doesn't have to be at right X-limit)
+        if (torpedo_mem_addr <= mem_start_pos - 32) {
+            do hideTorpedo(torpedo_y_pos);
+            do dispose();
+            return false;
+        }
+        else {
+            do hideTorpedo(torpedo_mem_addr);
+            // Move torpedo 4 steps to the left
+            let torpedo_mem_addr = torpedo_mem_addr - 4;
+            do drawTorpedo(torpedo_mem_addr);
+            return true;
+        }
+    }
+
+    method boolean collision(int targetTop, int targetBot) {
+        var boolean result;
+        let result = false;
+
+        if (torpedo_mem_addr <= mem_start_pos - 32) {
+            // @ X-limit
+            if (targetTop <= torpedo_mem_addr) {
+                if (torpedo_mem_addr <= targetBot) {
+                    let result = true;
+                }
+            }
+        }
+        return result;
+    }
+
+
+    method void drawTorpedo(int location) {
+	    var int memAddress; 
+	    let memAddress = 16384+location;
+	    // column 0
+	    do Memory.poke(memAddress +64, -4);
+	    do Memory.poke(memAddress +96, -2);
+	    do Memory.poke(memAddress +128, -1);
+	    do Memory.poke(memAddress +160, -2);
+	    do Memory.poke(memAddress +192, -4);
+	    // column 1
+	    do Memory.poke(memAddress +1, 18432);
+	    do Memory.poke(memAddress +33, 4096);
+	    do Memory.poke(memAddress +65, 18947);
+	    do Memory.poke(memAddress +97, 9295);
+	    do Memory.poke(memAddress +129, 2687);
+	    do Memory.poke(memAddress +161, 5455);
+	    do Memory.poke(memAddress +193, 3);
+	    return;
+    }
+
+    method void hideTorpedo(int location) {
+	    var int memAddress; 
+	    let memAddress = 16384+location;
+	    // column 0
+	    do Memory.poke(memAddress +64, 0);
+	    do Memory.poke(memAddress +96, 0);
+	    do Memory.poke(memAddress +128, 0);
+	    do Memory.poke(memAddress +160, 0);
+	    do Memory.poke(memAddress +192, 0);
+	    // column 1
+	    do Memory.poke(memAddress +1, 0);
+	    do Memory.poke(memAddress +33, 0);
+	    do Memory.poke(memAddress +65, 0);
+	    do Memory.poke(memAddress +97, 0);
+	    do Memory.poke(memAddress +129, 0);
+	    do Memory.poke(memAddress +161, 0);
+	    do Memory.poke(memAddress +193, 0);
+	    return;
+    }
+
+}
