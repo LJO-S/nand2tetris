@@ -48,3 +48,37 @@ _______________________________ Screen border
 
 
 
+
+# Random-generator
+
+Conceptually, you can break the problem into two main parts: 
+1. Updating the Seed 
+To produce a pseudo-random number, you start with an internal seed value and update it using a deterministic formula. A common method is the linear congruential generator (LCG), which uses an equation like: 
+
+seed = ( 𝑎 × seed + 𝑐 ) mod 𝑚 
+
+- Multiplication and Addition: The operations 𝑎 × seed a×seed and adding 𝑐 c are directly available. 
+
+- Modulus Operation: The modulus operation  mod 𝑚 ensures that the seed remains within a specific range. You can implement this by: 
+    -  Dividing the updated seed by 𝑚 m to get the integer quotient. 
+    - Multiplying the quotient by 𝑚 m and subtracting that from the updated seed, which gives you the remainder. 
+
+This new seed should be “mixed” well so that its successive values appear unpredictable. 
+
+2. Scaling to the Desired Range 
+After you update your seed, you need to scale it to fit the target range [minValue,maxValue]. Here’s one way to do that: 
+
+1. Determine the Range Size: 
+rangeSize = maxValue − minValue + 1 
+2. Extract a Value Within the Range: 
+Use the modulus operation to confine the pseudo-random value:
+result = seed mod rangeSize 
+3. Offset by the Minimum Value: 
+Finally, add the minimum value to shift the range: finalResult = result + minValue 
+
+Summary!
+Update the seed using a formula such as seed = ( 𝑎 × seed + 𝑐 ) mod 𝑚. 
+Scale the seed to the desired range by computing the modulus with the range size and then adding the minimum value.
+
+By carefully choosing the constants 
+𝑎, 𝑐, and 𝑚 in your seed update function, and then scaling the output to your target range, you can generate numbers that appear random for your game.
