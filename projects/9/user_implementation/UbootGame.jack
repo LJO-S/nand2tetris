@@ -46,8 +46,8 @@ class UbootGame {
 
     method Torpedo generateTorpedo (Background background) {
         var Torpedo torpedoVar;
-        let seed = updateSeed(seed*32, background.getTop(), background.getBot());
-        let torpedoVar = Torpedo.new(seed, background);
+        let seed = updateSeed(seed, background.getTop(), background.getBot());
+        let torpedoVar = Torpedo.new(seed*32, background);
         return torpedoVar;
     }
 
@@ -85,11 +85,15 @@ class UbootGame {
     method void run() {
         var char key;
         var boolean torpedoOOB;
+        var boolean sonarOnOff;
+        var boolean sonarCooldown;
+        var int sonarOnCounter;
+        var int sonarCDcounter;
 
         while (~exit) {
             // waits for a key to be pressed (key = 0 is default non-press)
             // TODO: fix this? Could increase the wait-counter and skip the while conditions totally
-            do Sys.wait(250);
+            do Sys.wait(110);
             let key = Keyboard.keyPressed();
             
             // -------------------------------------------------
@@ -105,12 +109,11 @@ class UbootGame {
             // -------------------------------------------------
             // Torpedo movement and collision check
             // Note: Torpedo.move() will also dispose of the torpedo
-            let torpedoOOB = torpedo.move();
+            let torpedoOOB = torpedo.move(sonarOnOff);
 
             if (torpedoOOB) {
                 // Torpedo has hit X-limit and is out-of-bounds
                 // ... Generate new torpedo object
-                // TODO: this shit activates straight away. why??
                 let torpedo = generateTorpedo(background);
                 //let exit = true;
             }
@@ -126,11 +129,41 @@ class UbootGame {
 	        if (key = 133) { 
                 do sub.move(0);
             }
+            // Sonar
+            if (key = 130) {
+                if (~(sonarCooldown)) {
+                    let sonarOnOff = true;
+                    do sub.sonarAnimation();
+                    do background.draw(23,26);
+                }
+            }
             // key = 130 is escape
             if (key = 140) { 
                 let exit = true; 
             }
             
+            // Increment sonar counter
+            if (sonarOnOff) {
+                if (sonarOnCounter = 32) {
+                    let sonarOnCounter = 0;
+                    let sonarOnOff = false;
+                    let sonarCooldown = true;
+                }
+                else {
+                    let sonarOnCounter = sonarOnCounter + 1;
+                }
+            }
+
+            if (sonarCooldown) {
+                if (sonarCDcounter = 32) {
+                let sonarCDcounter = 0;
+                let sonarCooldown = false;
+                }
+                else {
+                    let sonarCDcounter = sonarCDcounter + 1;
+                }
+            }        
+
             let key = Keyboard.keyPressed();
         }
 
