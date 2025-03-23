@@ -15,16 +15,8 @@ class Torpedo {
 
     constructor Torpedo new(int start_pos, Background background) {
         var int start_pos_offset;
-        // This is only set here, never to be touched again
-        // TODO: NEED A COSNTANT OFFSET TO GUARANTEE
-        // ... TORPEDO IS GENERATED IS RIGHTMOST X-LIMIT
-        // probably needs to be fined-tuned since we do not
-        // know size of torpedo sprite
-
-        // Probably starts at 1&384, and we want to move it [0,32)
         let start_pos_offset = background.getTop() + (32*4) + 30;
-        //let mem_start_pos = start_pos + 16384 + start_pos_offset;
-        let mem_start_pos = 16384 + start_pos_offset;
+        let mem_start_pos = start_pos + 16384 + start_pos_offset;
         let torpedo_mem_addr = mem_start_pos;
         do drawTorpedo((mem_start_pos - 16384));
 
@@ -36,7 +28,7 @@ class Torpedo {
         return;
     }
 
-    method boolean move() {
+    method boolean move(boolean sonarOnOff) {
         // We can only move one direction, i.e. left
         
         // Check if @ X-boundary. How??
@@ -46,9 +38,6 @@ class Torpedo {
         // When we have done that, we will have traversed a full row
         // We can therefore save a Y_START_POS, and just check if
         // we are @ Y_START_POS - 32
-
-        // TODO: this guy must be fine-tuned depending on where
-        // the sprite is instantiated (doesn't have to be at right X-limit)
         if (torpedo_mem_addr < (mem_start_pos - 28)) {
             do hideTorpedo(torpedo_mem_addr - 16384);
             do dispose();
@@ -56,10 +45,11 @@ class Torpedo {
         }
         else {
             do hideTorpedo(torpedo_mem_addr - 16384);
-            // Move torpedo 4 steps to the left
+            // Move torpedo one step to the left
             let torpedo_mem_addr = torpedo_mem_addr - 1;
-            do drawTorpedo(torpedo_mem_addr - 16384);
-            //return true;
+            if (sonarOnOff) {
+                do drawTorpedo(torpedo_mem_addr - 16384);
+            }
             return false;
         }
     }
