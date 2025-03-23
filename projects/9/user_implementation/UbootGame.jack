@@ -89,11 +89,9 @@ class UbootGame {
         while (~exit) {
             // waits for a key to be pressed (key = 0 is default non-press)
             // TODO: fix this? Could increase the wait-counter and skip the while conditions totally
-            // ^^^^ This is the way, otherwise it's too easy to dodge torps
-            while ((key = 0) & (~exit)) {
-                let key = Keyboard.keyPressed();
-                do Sys.wait(50);
-            }
+            do Sys.wait(250);
+            let key = Keyboard.keyPressed();
+            
             // -------------------------------------------------
             // TODO: Check for collisions
             // How?
@@ -101,7 +99,7 @@ class UbootGame {
             // Then we just check if @ X-limit and Y_sub_top <= Y_torp <= Y_sub_bot
             // If true, then collision, set exit to TRUE!!
             
-            // let exit = torpedo.collision(sub.getTop(), sub.getBot());
+            let exit = torpedo.collision(sub.getTop(), sub.getBot());
             
 
             // -------------------------------------------------
@@ -109,14 +107,16 @@ class UbootGame {
             // Note: Torpedo.move() will also dispose of the torpedo
             let torpedoOOB = torpedo.move();
 
-            if (~(torpedoOOB)) {
+            if (torpedoOOB) {
                 // Torpedo has hit X-limit and is out-of-bounds
                 // ... Generate new torpedo object
-                // let torpedo = generateTorpedo(background);
+                // TODO: this shit activates straight away. why??
+                let torpedo = generateTorpedo(background);
+                //let exit = true;
             }
             else {
-                //let exit = torpedo.collision(sub.getTop(), sub.getBot()); 
-                let exit = false;
+                let exit = torpedo.collision(sub.getTop(), sub.getBot()); 
+                //let exit = false;
             }
             // -------------------------------------------------
             // Key press parsing
@@ -130,13 +130,8 @@ class UbootGame {
             if (key = 140) { 
                 let exit = true; 
             }
-
-
-            // Waits for the key to be released.
-            while ((~(key = 0)) & (~exit)) {
-                let key = Keyboard.keyPressed();
-                do Sys.wait(50);
-            }
+            
+            let key = Keyboard.keyPressed();
         }
 
 	    if (exit) {
