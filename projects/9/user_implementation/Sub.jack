@@ -28,12 +28,12 @@ class Sub {
 
 	/** Get Y_top */
 	method int getTop() {
-		return Y_top;
+		return (Y_top + 16384);
 	}
 
 	/** Get Y_bot */
 	method int getBot() {
-		return Y_bot;
+		return (Y_bot + 16384);
 	}
 
 	/** Deallocates the Sub's memory. */
