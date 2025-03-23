@@ -78,6 +78,38 @@ class Sub {
 		return;
 	}
 
+	method void sonarAnimation() {
+		do Screen.setColor(true);
+		do Screen.drawCircle(40,  (sub_y_location/32)+15, 8);
+		do Screen.setColor(false);
+		do Screen.drawCircle(40,  (sub_y_location/32)+15, 6);
+		do Sys.wait(100);
+		do Screen.drawCircle(40,  (sub_y_location/32)+15, 8);
+		do Screen.setColor(true);
+		do Screen.drawCircle(40, (sub_y_location/32)+15, 12);
+		do Screen.setColor(false);
+		do Screen.drawCircle(40, (sub_y_location/32)+15, 10);
+		do Sys.wait(100);
+		do Screen.drawCircle(40, (sub_y_location/32)+15, 12);
+		do Screen.setColor(true);
+		do Screen.drawCircle(40, (sub_y_location/32)+15, 16);
+		do Screen.setColor(false);
+		do Screen.drawCircle(40, (sub_y_location/32)+15, 14);
+		do Sys.wait(100);
+		do Screen.drawCircle(40, (sub_y_location/32)+15, 16);
+		do Screen.setColor(true);
+		do Screen.drawCircle(40, (sub_y_location/32)+15, 20);
+		do Screen.setColor(false);
+		do Screen.drawCircle(40, (sub_y_location/32)+15, 18);
+		do Sys.wait(100);
+		do Screen.drawCircle(40, (sub_y_location/32)+15, 20);
+		do Screen.setColor(true);
+	
+
+		do drawSub(sub_y_location);
+		return;
+	}
+
     /** Draw sub at starting position */
 	// TODO: Actually I think this is pretty easy. 
 	// We know how many rows/cols we have. Each row is 512 cols, consisting of 16 bits.
