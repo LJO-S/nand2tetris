@@ -13,9 +13,20 @@ class Torpedo {
     field int torpedo_mem_addr;
     field int mem_start_pos;
 
-    constructor Object new(int start_pos) {
+    constructor Torpedo new(int start_pos, Background background) {
+        var int start_pos_offset;
         // This is only set here, never to be touched again
-        let mem_start_pos = start_pos;
+        // TODO: NEED A COSNTANT OFFSET TO GUARANTEE
+        // ... TORPEDO IS GENERATED IS RIGHTMOST X-LIMIT
+        // probably needs to be fined-tuned since we do not
+        // know size of torpedo sprite
+
+        // Probably starts at 1&384, and we want to move it [0,32)
+        let start_pos_offset = background.getTop() + (32*4) + 30;
+        //let mem_start_pos = start_pos + 16384 + start_pos_offset;
+        let mem_start_pos = 16384 + start_pos_offset;
+        let torpedo_mem_addr = mem_start_pos;
+        do drawTorpedo(mem_start_pos - 16384);
 
         return this;
     }
@@ -36,30 +47,33 @@ class Torpedo {
         // We can therefore save a Y_START_POS, and just check if
         // we are @ Y_START_POS - 32
 
-        // TODO: this fucker must be fine-tuned depending on where
+        // TODO: this guy must be fine-tuned depending on where
         // the sprite is instantiated (doesn't have to be at right X-limit)
-        if (torpedo_mem_addr <= mem_start_pos - 32) {
-            do hideTorpedo(torpedo_y_pos);
+        if (torpedo_mem_addr < mem_start_pos - 32) {
+            do hideTorpedo(torpedo_mem_addr - 16384);
             do dispose();
             return false;
         }
         else {
-            do hideTorpedo(torpedo_mem_addr);
+            do hideTorpedo(torpedo_mem_addr - 16384);
             // Move torpedo 4 steps to the left
-            let torpedo_mem_addr = torpedo_mem_addr - 4;
-            do drawTorpedo(torpedo_mem_addr);
-            return true;
+            let torpedo_mem_addr = torpedo_mem_addr - 2;
+            do drawTorpedo(torpedo_mem_addr - 16384);
+            //return true;
+            return false;
         }
     }
 
     method boolean collision(int targetTop, int targetBot) {
         var boolean result;
-        let result = false;
 
-        if (torpedo_mem_addr <= mem_start_pos - 32) {
+        let result = false;
+        if (torpedo_mem_addr < mem_start_pos - 32) {
             // @ X-limit
-            if (targetTop <= torpedo_mem_addr) {
-                if (torpedo_mem_addr <= targetBot) {
+            if (targetTop < torpedo_mem_addr) {
+                // within top-half
+                if (torpedo_mem_addr < targetBot) {
+                    // within bot-half 
                     let result = true;
                 }
             }

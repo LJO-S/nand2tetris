@@ -57,11 +57,11 @@ To produce a pseudo-random number, you start with an internal seed value and upd
 
 seed = ( 𝑎 × seed + 𝑐 ) mod 𝑚 
 
-- Multiplication and Addition: The operations 𝑎 × seed a×seed and adding 𝑐 c are directly available. 
+- Multiplication and Addition: The operations 𝑎 × seed and adding 𝑐 are directly available. 
 
 - Modulus Operation: The modulus operation  mod 𝑚 ensures that the seed remains within a specific range. You can implement this by: 
-    -  Dividing the updated seed by 𝑚 m to get the integer quotient. 
-    - Multiplying the quotient by 𝑚 m and subtracting that from the updated seed, which gives you the remainder. 
+    -  Dividing the updated seed by 𝑚 to get the integer quotient. 
+    -  Multiplying the quotient by 𝑚 and subtracting that from the updated seed, which gives you the remainder. 
 
 This new seed should be “mixed” well so that its successive values appear unpredictable. 
 

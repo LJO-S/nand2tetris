@@ -5,23 +5,25 @@ class UbootGame {
     static UbootGame instance;
     field Background background;
     field Sub sub;
+    field Torpedo torpedo;
     field boolean exit;
+    field int seed; // with [-32 768, 32 767]
 
     constructor UbootGame new() {
         // Clear the screen
         do Screen.clearScreen();
         let background = Background.new();
         let sub = Sub.new(background.getTop(), background.getBot());
-
+        let seed = 1; 
+        let torpedo = generateTorpedo(background);
         let exit = false;
         return this;
     }
 
-    // TODO: we need a Torpedo generator here
-    // generate at right X-limit and at random Y-coord within boundaries
-    // maybe do some mathematical magic?
-
     // TODO: we also need a torpedo de-generator here (hide and disposes at left X-limit)
+    // ... We set a torpGone bool, which could be fed into this one along 
+    //     with the torpedo object
+    // Isnt this fixed by the torp.move() disposing of the torp??
 
     /** Deallocates the object's memory. */
     method void dispose() {
@@ -42,8 +44,39 @@ class UbootGame {
         return instance;
     }
 
-    method void generateTorpedo () {
-        
+    method Torpedo generateTorpedo (Background background) {
+        var Torpedo torpedoVar;
+        let seed = updateSeed(seed*32, background.getTop(), background.getBot());
+        let torpedoVar = Torpedo.new(seed, background);
+        return torpedoVar;
+    }
+
+    method int updateSeed(int seed, int backgroundTop, int backgroundBot) {
+        var int sizeY;
+        var int quotient;
+        var int remainder;
+        // Using a Linear Congruential Generator
+        // 1. Update Seed
+        // seed = (a * seed + c) mod m
+        let seed = (5 * seed) + 11;
+
+        // Modulo operator keeps us within specified range
+        // ... What is the specified range?
+        // ... We know that the generated value must be multiplied
+        // ... with (32) to generate a different row. 
+        // ... The background_top/bot sets the boundary for which we 
+        // ... are allowed to spawn. We also need to take into account
+        // ... that the sprite occupies white space.
+        // 
+        let sizeY = (backgroundBot - backgroundTop)/32 + 1; // should this be divided by 32?
+        // Integer quotient
+        let quotient = seed / sizeY;
+        // Remainder = 0 if common divisor, otherwise think modulo operation
+        let remainder = quotient * sizeY;  
+        // Update seed
+        let seed = seed - remainder;
+        // TODO might have to confine the lil guy here if shit hits the fan
+        return seed;
     }
 
 
@@ -56,6 +89,7 @@ class UbootGame {
         while (~exit) {
             // waits for a key to be pressed (key = 0 is default non-press)
             // TODO: fix this? Could increase the wait-counter and skip the while conditions totally
+            // ^^^^ This is the way, otherwise it's too easy to dodge torps
             while ((key = 0) & (~exit)) {
                 let key = Keyboard.keyPressed();
                 do Sys.wait(50);
@@ -66,17 +100,23 @@ class UbootGame {
             // We know how to calculate when torpedo is @ X-limit.
             // Then we just check if @ X-limit and Y_sub_top <= Y_torp <= Y_sub_bot
             // If true, then collision, set exit to TRUE!!
-            let exit = Torpedo.collision(sub.getTop(), sub.getBot());
+            
+            // let exit = torpedo.collision(sub.getTop(), sub.getBot());
+            
 
             // -------------------------------------------------
             // Torpedo movement and collision check
-            torpedoOOB = Torp.move();
+            // Note: Torpedo.move() will also dispose of the torpedo
+            let torpedoOOB = torpedo.move();
+
             if (~(torpedoOOB)) {
                 // Torpedo has hit X-limit and is out-of-bounds
-                // GENERATE NEW TORPEDO
+                // ... Generate new torpedo object
+                // let torpedo = generateTorpedo(background);
             }
             else {
-                let exit = Torpedo.collision(sub.getTop(), sub.getBot()); 
+                //let exit = torpedo.collision(sub.getTop(), sub.getBot()); 
+                let exit = false;
             }
             // -------------------------------------------------
             // Key press parsing
