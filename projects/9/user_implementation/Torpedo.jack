@@ -26,7 +26,7 @@ class Torpedo {
         //let mem_start_pos = start_pos + 16384 + start_pos_offset;
         let mem_start_pos = 16384 + start_pos_offset;
         let torpedo_mem_addr = mem_start_pos;
-        do drawTorpedo(mem_start_pos - 16384);
+        do drawTorpedo((mem_start_pos - 16384));
 
         return this;
     }
@@ -49,15 +49,15 @@ class Torpedo {
 
         // TODO: this guy must be fine-tuned depending on where
         // the sprite is instantiated (doesn't have to be at right X-limit)
-        if (torpedo_mem_addr < mem_start_pos - 32) {
+        if (torpedo_mem_addr < (mem_start_pos - 28)) {
             do hideTorpedo(torpedo_mem_addr - 16384);
             do dispose();
-            return false;
+            return true;
         }
         else {
             do hideTorpedo(torpedo_mem_addr - 16384);
             // Move torpedo 4 steps to the left
-            let torpedo_mem_addr = torpedo_mem_addr - 2;
+            let torpedo_mem_addr = torpedo_mem_addr - 1;
             do drawTorpedo(torpedo_mem_addr - 16384);
             //return true;
             return false;
@@ -68,7 +68,7 @@ class Torpedo {
         var boolean result;
 
         let result = false;
-        if (torpedo_mem_addr < mem_start_pos - 32) {
+        if (torpedo_mem_addr < (mem_start_pos - 28)) {
             // @ X-limit
             if (targetTop < torpedo_mem_addr) {
                 // within top-half
