@@ -8,6 +8,9 @@ class UbootGame {
     field Torpedo torpedo;
     field boolean exit;
     field int seed; // with [-32 768, 32 767]
+    field int torpedo_speed_val;
+    field int torpedo_speed_cntr;
+    field int score;
 
     constructor UbootGame new() {
         // Clear the screen
@@ -15,6 +18,9 @@ class UbootGame {
         let background = Background.new();
         let sub = Sub.new(background.getTop(), background.getBot());
         let seed = 1; 
+        let score = 0;
+        let torpedo_speed_val = 1;
+        let torpedo_speed_cntr = 0;
         let torpedo = generateTorpedo(background);
         let exit = false;
         return this;
@@ -47,7 +53,7 @@ class UbootGame {
     method Torpedo generateTorpedo (Background background) {
         var Torpedo torpedoVar;
         let seed = updateSeed(seed, background.getTop(), background.getBot());
-        let torpedoVar = Torpedo.new(seed*32, background);
+        let torpedoVar = Torpedo.new(seed*32, background, torpedo_speed_val);
         return torpedoVar;
     }
 
@@ -58,7 +64,7 @@ class UbootGame {
         // Using a Linear Congruential Generator
         // 1. Update Seed
         // seed = (a * seed + c) mod m
-        let seed = (5 * seed) + 11;
+        let seed = (141 * seed) + 101;
 
         // Modulo operator keeps us within specified range
         // ... What is the specified range?
@@ -75,10 +81,19 @@ class UbootGame {
         let remainder = quotient * sizeY;  
         // Update seed
         let seed = seed - remainder;
-        // TODO might have to confine the lil guy here if shit hits the fan
+        // Confine the seed due to observed error
+        if (seed > 6343) {
+            let seed = 6400;
+        }
         return seed;
     }
 
+
+    method void updateScore(int score) {
+        do Output.moveCursor(22,35);
+        do Output.printInt(score);
+        return;
+    }
 
     /** Starts the game, and handles inputs from the user that control
      *  the sub's movement direction. */
@@ -92,20 +107,16 @@ class UbootGame {
 
         while (~exit) {
             // waits for a key to be pressed (key = 0 is default non-press)
-            // TODO: fix this? Could increase the wait-counter and skip the while conditions totally
             do Sys.wait(110);
             let key = Keyboard.keyPressed();
             
             // -------------------------------------------------
-            // TODO: Check for collisions
-            // How?
+            // Check for collisions
             // We know how to calculate when torpedo is @ X-limit.
             // Then we just check if @ X-limit and Y_sub_top <= Y_torp <= Y_sub_bot
             // If true, then collision, set exit to TRUE!!
-            
             let exit = torpedo.collision(sub.getTop(), sub.getBot());
             
-
             // -------------------------------------------------
             // Torpedo movement and collision check
             // Note: Torpedo.move() will also dispose of the torpedo
@@ -113,20 +124,30 @@ class UbootGame {
 
             if (torpedoOOB) {
                 // Torpedo has hit X-limit and is out-of-bounds
-                // ... Generate new torpedo object
+                if (torpedo_speed_cntr = 3) {
+                    let torpedo_speed_cntr = 0;
+                    if (torpedo_speed_val < 4) {
+                        let torpedo_speed_val = torpedo_speed_val * 2;
+                    }
+                }
+                else {
+                    let torpedo_speed_cntr = torpedo_speed_cntr + 1;
+                }
+                let score = score + 1;
+                do updateScore(score);
                 let torpedo = generateTorpedo(background);
-                //let exit = true;
             }
             else {
                 let exit = torpedo.collision(sub.getTop(), sub.getBot()); 
-                //let exit = false;
             }
             // -------------------------------------------------
             // Key press parsing
             if (key = 131) { 
+                // Move up
                 do sub.move(1);
             } 
-	        if (key = 133) { 
+	        if (key = 133) {
+                // Move down 
                 do sub.move(0);
             }
             // Sonar
@@ -134,20 +155,22 @@ class UbootGame {
                 if (~(sonarCooldown)) {
                     let sonarOnOff = true;
                     do sub.sonarAnimation();
+                    // Need to reanimate background in case sonar animation
+                    // disturbs it
                     do background.draw(23,26);
                 }
             }
-            // key = 130 is escape
+            // ESC key
             if (key = 140) { 
                 let exit = true; 
             }
             
             // Increment sonar counter
             if (sonarOnOff) {
+                let sonarCooldown = true;
                 if (sonarOnCounter = 32) {
                     let sonarOnCounter = 0;
                     let sonarOnOff = false;
-                    let sonarCooldown = true;
                 }
                 else {
                     let sonarOnCounter = sonarOnCounter + 1;
@@ -155,9 +178,9 @@ class UbootGame {
             }
 
             if (sonarCooldown) {
-                if (sonarCDcounter = 32) {
-                let sonarCDcounter = 0;
-                let sonarCooldown = false;
+                if (sonarCDcounter = 48) {
+                    let sonarCDcounter = 0;
+                    let sonarCooldown = false;
                 }
                 else {
                     let sonarCDcounter = sonarCDcounter + 1;
