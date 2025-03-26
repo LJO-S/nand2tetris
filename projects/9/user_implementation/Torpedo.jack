@@ -12,13 +12,15 @@ class Torpedo {
 
     field int torpedo_mem_addr;
     field int mem_start_pos;
+    field int torpedo_speed;
 
-    constructor Torpedo new(int start_pos, Background background) {
+    constructor Torpedo new(int start_pos, Background background, int torpedo_speed_val) {
         var int start_pos_offset;
+        // Offset with top-boundary, sprite whitespace, and right-shift X a little
         let start_pos_offset = background.getTop() + (32*4) + 30;
         let mem_start_pos = start_pos + 16384 + start_pos_offset;
         let torpedo_mem_addr = mem_start_pos;
-        do drawTorpedo((mem_start_pos - 16384));
+        let torpedo_speed = torpedo_speed_val;
 
         return this;
     }
@@ -38,7 +40,7 @@ class Torpedo {
         // When we have done that, we will have traversed a full row
         // We can therefore save a Y_START_POS, and just check if
         // we are @ Y_START_POS - 32
-        if (torpedo_mem_addr < (mem_start_pos - 28)) {
+        if (torpedo_mem_addr < (mem_start_pos - 29)) {
             do hideTorpedo(torpedo_mem_addr - 16384);
             do dispose();
             return true;
@@ -46,7 +48,7 @@ class Torpedo {
         else {
             do hideTorpedo(torpedo_mem_addr - 16384);
             // Move torpedo one step to the left
-            let torpedo_mem_addr = torpedo_mem_addr - 1;
+            let torpedo_mem_addr = torpedo_mem_addr - torpedo_speed;
             if (sonarOnOff) {
                 do drawTorpedo(torpedo_mem_addr - 16384);
             }
@@ -58,7 +60,7 @@ class Torpedo {
         var boolean result;
 
         let result = false;
-        if (torpedo_mem_addr < (mem_start_pos - 28)) {
+        if (torpedo_mem_addr < (mem_start_pos - 29)) {
             // @ X-limit
             if (targetTop < torpedo_mem_addr) {
                 // within top-half
