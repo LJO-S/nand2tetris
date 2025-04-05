@@ -59,7 +59,8 @@ class JackTokenizer:
         pos = self.file.tell()  # current position of file
         line = self.file.readline()
         line_split = line.split()
-        while line == "\n" or (
+        # while line == "\n" or (
+        while line.isspace() or (
             len(line_split) > 0
             and ((longComment) or ("//" in line_split[0]) or ("/**" in line_split[0]))
         ):
@@ -124,7 +125,7 @@ class JackTokenizer:
 
     def stringVal(self):
         stringVal = self.currentToken.split('"')
-        return stringVal[0]
+        return stringVal[1]
 
 
 def xmlOutput(tokenizer: JackTokenizer, outputFile=None):
@@ -134,7 +135,9 @@ def xmlOutput(tokenizer: JackTokenizer, outputFile=None):
     while tokenizer.hasMoreTokens():
         tokenizer.advance()
         if tokenizer.tokenType() == "STRING_CONST":
-            ET.SubElement(root, "stringConstant").text = tokenizer.stringVal()
+            ET.SubElement(root, "stringConstant").text = (
+                " " + tokenizer.stringVal() + " "
+            )
         elif tokenizer.tokenType() == "SYMBOL":
             ET.SubElement(root, "symbol").text = tokenizer.symbol()
         elif tokenizer.tokenType() == "INT_CONST":
@@ -167,20 +170,12 @@ if __name__ == "__main__":
         outputFile = str(outputDir) + "/" + f"{outputName}T_user.xml"
         tokenizer = JackTokenizer(inputPath)
         xmlOutput(tokenizer, outputFile)
-        # while tokenizer.hasMoreTokens():
-        #    tokenizer.advance()
-        #    print(tokenizer.currentToken)
-        #    print(tokenizer.tokenType())
         tokenizer.close_input_file()
     else:
         # Directory (multiple files)
         outputDir = inputPath
-        outputName = outputDir.name
         for jackFile in inputPath.glob("*.jack"):
-            outputFile = str(outputDir) + "_OUT" + "/" + f"{jackFile.stem}.xml"
+            outputFile = str(outputDir) + "/" + f"{jackFile.stem}T_user.xml"
             tokenizer = JackTokenizer(jackFile)
             xmlOutput(tokenizer, outputFile)
-            # while tokenizer.hasMoreTokens():
-            #    tokenizer.advance()
-            #    print(tokenizer.currentToken)
             tokenizer.close_input_file()
