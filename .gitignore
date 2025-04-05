@@ -7,4 +7,5 @@ projects/7/**/*.asm
 projects/8/**/*.asm
 projects/8/**/*.out
 projects/9/**/*.vm
+projects/10/**/*user.xml
 The Elements of Computing Systems.pdf
