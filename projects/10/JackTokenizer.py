@@ -1,3 +1,6 @@
+#!/usr/bin/python
+
+import xml.etree.ElementTree as ET
 import re
 import sys
 from pathlib import Path
@@ -14,6 +17,30 @@ class JackTokenizer:
         self.file = self.open_input_file(inputFile)
         self.currentToken = None
         self.tokens = None
+
+        self.keywordTable = [
+            "class",
+            "constructor",
+            "function",
+            "method",
+            "field",
+            "static",
+            "var",
+            "int",
+            "char",
+            "boolean",
+            "void",
+            "true",
+            "false",
+            "null",
+            "this",
+            "let",
+            "do",
+            "if",
+            "else",
+            "while",
+            "return",
+        ]
 
     def open_input_file(self, path: str):
         """Opens the file specified by path"""
@@ -56,28 +83,70 @@ class JackTokenizer:
             line = self.file.readline()
             # Substitute // and all following characters with  using Regular Expression
             line_no_comments = re.sub(r"//.*", " ", line)
-            # Find all word characters (a-z, 0-9) that occur at least once or...
-            # ... all non-whitespace and non-word i.e. symbols.
-            self.tokens = re.findall(r"\w+|[^\s\w]", line_no_comments)
+            # 1. Find everything that starts and ends with ". It is not allowed with new space and " inside
+            # 2. Find all word characters (a-z, 0-9) that occur at least once
+            # 3. Find all non-whitespace and non-word i.e. symbols.
+            self.tokens = re.findall(r'"[^"\n]*"|[\w]+|[^\s\w]', line_no_comments)
         self.currentToken = self.tokens.pop(0)
 
     def tokenType(self):
-        pass
+        """Returns the type of the current token"""
+
+        if re.search(r'"[^"\n]*"', self.currentToken):
+            return "STRING_CONST"
+
+        elif re.search(r"[^\w]", self.currentToken):
+            return "SYMBOL"
+
+        elif re.search(r"[0-9]+", self.currentToken):
+            return "INT_CONST"
+
+        elif self.currentToken in self.keywordTable:
+            return "KEYWORD"
+
+        elif re.search(r"\w", self.currentToken):
+            return "IDENTIFIER"
+        else:
+            raise Exception("Unknown token: " + self.currentToken)
 
     def keyWord(self):
-        pass
+        # return self.currentToken.upper()
+        return self.currentToken
 
     def symbol(self):
-        pass
+        return self.currentToken
 
     def identifier(self):
-        pass
+        return self.currentToken
 
     def intVal(self):
-        pass
+        return self.currentToken
 
     def stringVal(self):
-        pass
+        stringVal = self.currentToken.split('"')
+        return stringVal[0]
+
+
+def xmlOutput(tokenizer: JackTokenizer, outputFile=None):
+    """Handles XML file writing"""
+
+    root = ET.Element("tokens")
+    while tokenizer.hasMoreTokens():
+        tokenizer.advance()
+        if tokenizer.tokenType() == "STRING_CONST":
+            ET.SubElement(root, "stringConstant").text = tokenizer.stringVal()
+        elif tokenizer.tokenType() == "SYMBOL":
+            ET.SubElement(root, "symbol").text = tokenizer.symbol()
+        elif tokenizer.tokenType() == "INT_CONST":
+            ET.SubElement(root, "integerConstant").text = tokenizer.intVal()
+        elif tokenizer.tokenType() == "KEYWORD":
+            ET.SubElement(root, "keyword").text = tokenizer.keyWord()
+        elif tokenizer.tokenType() == "IDENTIFIER":
+            ET.SubElement(root, "identifier").text = tokenizer.identifier()
+
+    tree = ET.ElementTree(root)
+    ET.indent(tree, "")
+    tree.write(outputFile)
 
 
 if __name__ == "__main__":
@@ -88,20 +157,30 @@ if __name__ == "__main__":
         )
         sys.exit(1)
     # Get filename from cmd line
-    input_path = sys.argv[1]
-    input_path = Path(input_path)
-    if "jack" in str(input_path).split("."):
+    inputPath = sys.argv[1]
+    inputPath = Path(inputPath)
+
+    if "jack" in str(inputPath).split("."):
         # Single file
-        tokenizer = JackTokenizer(input_path)
-        while tokenizer.hasMoreTokens():
-            tokenizer.advance()
-            print(tokenizer.currentToken)
+        outputDir = inputPath.parent
+        outputName = inputPath.stem
+        outputFile = str(outputDir) + "/" + f"{outputName}T_user.xml"
+        tokenizer = JackTokenizer(inputPath)
+        xmlOutput(tokenizer, outputFile)
+        # while tokenizer.hasMoreTokens():
+        #    tokenizer.advance()
+        #    print(tokenizer.currentToken)
+        #    print(tokenizer.tokenType())
         tokenizer.close_input_file()
     else:
         # Directory (multiple files)
-        for vm_file in input_path.glob("*.jack"):
-            tokenizer = JackTokenizer(vm_file)
-            while tokenizer.hasMoreTokens():
-                tokenizer.advance()
-                print(tokenizer.currentToken)
+        outputDir = inputPath
+        outputName = outputDir.name
+        for jackFile in inputPath.glob("*.jack"):
+            outputFile = str(outputDir) + "_OUT" + "/" + f"{jackFile.stem}.xml"
+            tokenizer = JackTokenizer(jackFile)
+            xmlOutput(tokenizer, outputFile)
+            # while tokenizer.hasMoreTokens():
+            #    tokenizer.advance()
+            #    print(tokenizer.currentToken)
             tokenizer.close_input_file()
