@@ -111,8 +111,7 @@ class JackTokenizer:
             raise Exception("Unknown token: " + self.currentToken)
 
     def keyWord(self):
-        # return self.currentToken.upper()
-        return self.currentToken
+        return self.currentToken.lower()
 
     def symbol(self):
         return self.currentToken
@@ -153,7 +152,6 @@ def xmlOutput(tokenizer: JackTokenizer, outputFile=None):
 
 
 if __name__ == "__main__":
-    # TODO modify this to handle .xml files
     if len(sys.argv) < 2:
         print(
             "Usage: python JackTokenizer.py [input_dir/input_filename.vm] or [input_dir]"
