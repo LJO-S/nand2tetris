@@ -17,131 +17,79 @@ import JackTokenizer
 
 class CompilationEngine:
 
-    def __init__(self, tokenizer: JackTokenizer, outputFile: str):
+    def __init__(self, tokenizedInput: ET.Element, outputFile: str):
         self.outputFile = outputFile
-        self.tokenizer = tokenizer
-        self.depth = 0  # incr for {, decr for }
-        self.depthStack = []  # append for {, pop for }
+        self.tokens = list(tokenizedInput)
+        self.idx = 0
+        self.token = self.tokens[0]
+        # Creating a seed to be grown into an XML
+        self.root = ET.Element("class")
+
+        # Heading to compile class which is recursive in itself
         self.compileClass()
 
     def compileClass(self):
-        self.depthStack.append(ET.Element("class"))
-        while self.tokenizer.hasMoreTokens():
-            # =========================================================
-            self.tokenizer.advance()
-            # =========================================================
-            if self.tokenizer.tokenType() == "KEYWORD":
-                # --------------------------------------------------
-                if self.tokenizer.keyWord() == "class":
-                    ET.SubElement(self.depthStack[-1], "keyword").text = (
-                        self.tokenizer.keyWord()
-                    )
-                # --------------------------------------------------
-                elif (
-                    self.tokenizer.keyWord() == "constructor"
-                    or self.tokenizer.keyWord() == "method"
-                    or self.tokenizer.keyWord() == "function"
-                ):
-                    self.compileSubroutine()
-                # --------------------------------------------------
-                elif (
-                    self.tokenizer.keyWord() == "int"
-                    or self.tokenizer.keyWord() == "boolean"
-                    or self.tokenizer.keyWord() == "char"
-                ):
-                    # TERMINAL BOYS!!
-                    ET.SubElement(self.depthStack[-1], "keyword").text = (
-                        self.tokenizer.keyWord()
-                    )
-                # --------------------------------------------------
-                elif self.tokenizer.keyWord() == "VOID":
-                    pass
-                # --------------------------------------------------
-                elif self.tokenizer.keyWord() == "VAR":
-                    pass
-                # --------------------------------------------------
-                elif (
-                    self.tokenizer.keyWord() == "static"
-                    or self.tokenizer.keyWord() == "field"
-                ):
-                    self.compileClassVarDec()
-                # --------------------------------------------------
-                elif self.tokenizer.keyWord() == "LET":
-                    pass
-                # --------------------------------------------------
-                elif self.tokenizer.keyWord() == "DO":
-                    pass
-                # --------------------------------------------------
-                elif self.tokenizer.keyWord() == "IF":
-                    pass
-                # --------------------------------------------------
-                elif self.tokenizer.keyWord() == "ELSE":
-                    pass
-                # --------------------------------------------------
-                elif self.tokenizer.keyWord() == "WHILE":
-                    pass
-                elif self.tokenizer.keyWord() == "RETURN":
-                    pass
-                elif self.tokenizer.keyWord() == "TRUE":
-                    pass
-                elif self.tokenizer.keyWord() == "FALSE":
-                    pass
-                elif self.tokenizer.keyWord() == "NULL":
-                    pass
-                elif self.tokenizer.keyWord() == "THIS":
-                    pass
-            # =========================================================
-            elif self.tokenizer.tokenType() == "SYMBOL":
-                # TODO:
-                # this feels like an append with {
-                # this feels like a .pop() with ; and }
-                # also gotta handle , and shit
-                ET.SubElement(self.depthStack[-1], "symbol").text = (
-                    self.tokenizer.symbol()
-                )
-                if (
-                    self.tokenizer.symbol() == ";" or self.tokenizer.symbol() == "}"
-                ) and len(self.depthStack > 1):
-                    # done with whatever statement we were parsing
-                    self.depthStack.pop()
-                elif self.tokenizer.symbol() == "(":
-                    # This may symbolize many things, such as parameterList, expression, expressionList
-                    # What determines this? Surely the previous state which called upon a (_)
-                    # If inside "subroutineDec" --> "parameterList"
-                    # If inside
-                    pass
+        if (self.token.tag != "keyword") or (self.token.text != "class"):
+            raise Exception(
+                "Token list does not start with '<keyword> class </keyword>'!"
+            )
+        else:
+            # <keyword> class </keyword>
+            ET.SubElement(self.root, self.token.tag).text = self.token.text
+        while (self.token.tag != "symbol") and (self.token.text != "{"):
+            self.advance()
+            ET.SubElement(self.root, self.token.tag).text = self.token.text
+        ### =============================
+        # Recursive Part!!!
+        while (self.token.tag == "keyword") and (
+            (self.token.text in ("static", "field"))
+        ):
+            self.compileClassVarDec()
+            self.advance()
+        while (self.token.tag == "keyword") and (
+            (self.token.text in ("constructor", "function", "method"))
+        ):
+            self.compileSubroutine()
+            self.advance()
+        ### =============================
+        # Write <symbol> } </symbol>
+        ET.SubElement(self.root, self.token.tag).text = self.token.text
 
-            # =========================================================
-            elif self.tokenizer.tokenType() == "INT_CONST":
-                pass
-            # =========================================================
-            elif self.tokenizer.tokenType() == "STRING_CONST":
-                pass
-            # =========================================================
-            elif self.tokenizer.tokenType() == "IDENTIFIER":
-                ET.SubElement(self.depthStack[-1], "identifier").text = (
-                    self.tokenizer.identifier()
-                )
-            # =========================================================
-
-        tree = ET.ElementTree(self.depthStack[-1])
-        ET.indent(tree, "")
+        # Write output file
+        tree = ET.ElementTree(self.root)
+        ET.indent(tree, "   ")
         tree.write(self.outputFile)
 
     def compileClassVarDec(self):
-        self.depthStack.append(ET.SubElement(self.depthStack[-1], "classVarDec"))
-        # i.e. field // static
-        ET.SubElement(self.depthStack[-1], "keyword").text = self.tokenizer.keyWord()
+        branch = ET.SubElement(self.root, "classVarDec")
+        ET.SubElement(branch, self.token.tag).text = self.token.text
+        while (self.token.tag != "symbol") and (self.token.text != ";"):
+            self.advance()
+            ET.SubElement(branch, self.token.tag).text = self.token.text
 
     def compileSubroutine(self):
-        # non-terminal
-        self.depthStack.append(ET.SubElement(self.depthStack[-1], "subroutineDec"))
-        # i.e. constructor // function // method
-        ET.SubElement(self.depthStack[-1], "keyword").text = self.tokenizer.keyWord()
+        branch = ET.SubElement(self.root, "subroutineDec")
+        ET.SubElement(branch, self.token.tag).text = self.token.text
+        while (self.token.tag != "symbol") and (self.token.text != "("):
+            self.advance()
+            ET.SubElement(branch, self.token.tag).text = self.token.text
+        if (self.token.tag == "symbol") and (self.token.text == "("):
+            ET.SubElement(branch, self.token.tag).text = self.token.text
+            self.advance()
+            self.compileParameterList(branch)
+        else:
+            raise Exception(
+                f"Expected ' <symbol> ( </symbol>' but got '<"
+                + self.token.tag
+                + "> "
+                + self.token.text
+                + " </"
+                + self.token.tag
+                + ">'"
+            )
 
-    def compileParameterList(self):
-        # non-terminal
-        # This can only occur inside a SubroutineDec
+    def compileParameterList(self, branchName):
+        branch = ET.SubElement(branchName, "parameterList")
         pass
 
     def compileVarDec(self):
@@ -184,6 +132,25 @@ class CompilationEngine:
     def compileExpressionList(self):
         # non-terminal
         pass
+
+    ## Helper functions
+    def hasMoreTokens(self):
+        """Checks if more tokens are available.
+        Returns true if current idx is smaller than length of
+        tokens list."""
+        return self.idx < len(self.tokens)
+
+    def advance(self):
+        if self.hasMoreTokens():
+            self.idx += 1
+            self.token = self.tokens[self.idx]
+        else:
+            self.token = None
+
+    def peek(self):
+        if self.hasMoreTokens():
+            return self.tokens[self.idx + 1]
+        return None
 
 
 if __name__ == "__main__":
