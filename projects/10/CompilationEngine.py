@@ -104,6 +104,12 @@ class CompilationEngine:
                 ) and len(self.depthStack > 1):
                     # done with whatever statement we were parsing
                     self.depthStack.pop()
+                elif self.tokenizer.symbol() == "(":
+                    # This may symbolize many things, such as parameterList, expression, expressionList
+                    # What determines this? Surely the previous state which called upon a (_)
+                    # If inside "subroutineDec" --> "parameterList"
+                    # If inside
+                    pass
 
             # =========================================================
             elif self.tokenizer.tokenType() == "INT_CONST":
@@ -135,6 +141,7 @@ class CompilationEngine:
 
     def compileParameterList(self):
         # non-terminal
+        # This can only occur inside a SubroutineDec
         pass
 
     def compileVarDec(self):
