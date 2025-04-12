@@ -24,7 +24,24 @@ class CompilationEngine:
         # Heading to compile class which initiates the machinery
         self.compileClass()
 
+        # Write output file
+        # xml_str = ET.tostring(self.root, encoding="unicode", short_empty_elements=False)
+        # pretty_xml = minidom.parseString(xml_str).toprettyxml(indent="  ")
+        # pretty_xml_no_decl = "\n".join(pretty_xml.split("\n")[1:])
+        # with open(self.outputFile, "w", encoding="utf-8") as f:
+        #    f.write(pretty_xml_no_decl)
+
+        self.indent(self.root)
+        tree = ET.ElementTree(self.root)
+        # ET.indent(tree, "   ")
+        tree.write(
+            file_or_filename=self.outputFile,
+            short_empty_elements=False,
+        )
+
     def compileClass(self):
+        """Compiles a whole class. \n
+        Grammar: 'class' className '{' classVarDec* subroutineDec* '}'"""
         if (self.token.tag != "keyword") or (self.token.text != "class"):
             raise Exception(
                 "Token list does not start with '<keyword> class </keyword>'!"
@@ -49,22 +66,9 @@ class CompilationEngine:
         # Symbol '}'
         self.writexml(self.root)
 
-        # Write output file
-        # xml_str = ET.tostring(self.root, encoding="unicode", short_empty_elements=False)
-        # pretty_xml = minidom.parseString(xml_str).toprettyxml(indent="  ")
-        # pretty_xml_no_decl = "\n".join(pretty_xml.split("\n")[1:])
-        # with open(self.outputFile, "w", encoding="utf-8") as f:
-        #    f.write(pretty_xml_no_decl)
-
-        self.indent(self.root)
-        tree = ET.ElementTree(self.root)
-        # ET.indent(tree, "   ")
-        tree.write(
-            file_or_filename=self.outputFile,
-            short_empty_elements=False,
-        )
-
     def compileClassVarDec(self):
+        """Compiles a class variable declaration. \n
+        Grammar: ('static' | 'field') type varName (',' varName)* ';'"""
         branch = ET.SubElement(self.root, "classVarDec")
         self.writexml(branch)
         while self.token.text != ";":
@@ -72,6 +76,9 @@ class CompilationEngine:
             self.writexml(branch)
 
     def compileSubroutine(self):
+        """Compiles a subroutine (declaration + body). \n
+        Grammar: ('constructor' | 'function' | 'method') ('void' | type)
+        subroutineName '(' parameterList ')' subroutineBody"""
         branchDec = ET.SubElement(self.root, "subroutineDec")
         self.writexml(branchDec)
         while self.token.text != "(":
@@ -91,20 +98,22 @@ class CompilationEngine:
         while (self.token.tag == "keyword") and (self.token.text == "var"):
             self.compileVarDec(branchBody)
         ## statements
-        # while self.token.text != "}":
-        #    self.compileStatements(branchBody)
         self.compileStatements(ET.SubElement(branchBody, "statements"))
         # '}'
         self.verify("symbol", "}")
         self.writexml(branchBody)
 
     def compileParameterList(self, branchName):
+        """Compiles a list of parameters.\n
+        Grammar: ((type varName)(',' type varName)*)?"""
         branch = ET.SubElement(branchName, "parameterList")
         while self.token.text != ")":
             self.writexml(branch)
             self.advance()
 
     def compileVarDec(self, branchName):
+        """Compiles a variable declaration. \n
+        Grammar: 'var' type varName (',' varName)* ';'"""
         branch = ET.SubElement(branchName, "varDec")
         self.writexml(branch)  # var
         while self.token.text != ";":
@@ -114,6 +123,9 @@ class CompilationEngine:
         self.advance()
 
     def compileStatements(self, branch):
+        """Compiles multiple statements. \n
+        Grammar: letStatement | doStatement | ifStatement | whileStatement | returnStatement
+        """
         while self.token.text in ("let", "if", "while", "do", "return"):
             # let
             if (self.token.tag == "keyword") and (self.token.text == "let"):
@@ -134,6 +146,8 @@ class CompilationEngine:
                 self.verify("keyword", "ANY")
 
     def compileDo(self, branch):
+        """Compiles a do statement. \n
+        Grammar: 'do' subroutineCall"""
         # do
         self.writexml(branch)
         # id
@@ -158,6 +172,8 @@ class CompilationEngine:
         self.advance()
 
     def compileLet(self, branch):
+        """Compiles a let statement. \n
+        Grammar: 'let' varName ('[' expression ']')? '=' expression ';'"""
         # let
         self.writexml(branch)
         # varName
@@ -175,7 +191,6 @@ class CompilationEngine:
             self.advance()
             self.verify("symbol", "=")
             self.writexml(branch)
-            print("================>    " + self.token.text)
             self.compileExpression(ET.SubElement(branch, "expression"))
         elif (self.token.tag == "symbol") and (self.token.text == "="):
             branchExpression = ET.SubElement(branch, "expression")
@@ -185,6 +200,8 @@ class CompilationEngine:
         self.advance()
 
     def compileWhile(self, branch):
+        """Compiles a while statement. \n
+        Grammar: 'while' '(' expression ')' '{' statements '}'"""
         # while
         self.writexml(branch)
         # symbol
@@ -204,6 +221,8 @@ class CompilationEngine:
         self.advance()
 
     def compileReturn(self, branch):
+        """Compiles a return statement. \n
+        Grammar: 'while' expression? ';'"""
         # return
         self.writexml(branch)
         if self.peek().text != ";":
@@ -217,6 +236,9 @@ class CompilationEngine:
         self.advance()
 
     def compileIf(self, branch):
+        """Compiles an if statement. \n
+        Grammar: 'if' '(' expression ')' '{' statements '}' ('else' '{' statements '}')?
+        """
         # if
         self.writexml(branch)
         # symbol
@@ -249,6 +271,8 @@ class CompilationEngine:
             self.advance()
 
     def compileExpression(self, branch):
+        """Compiles an expression. \n
+        Grammar: term (op term)*"""
         self.advance()  # term
         self.compileTerm(ET.SubElement(branch, "term"))
         if self.token.text in ("+", "-", "*", "/", "&", "|", "<", ">", "="):
@@ -256,6 +280,10 @@ class CompilationEngine:
             self.compileExpression(branch)
 
     def compileTerm(self, branch):
+        """Compiles a term. \n
+        Grammar: integerConstant | stringConstant | keywordConstant |
+        varName | varName '[' expression ']' | subroutineCall | '(' expression ')' |
+        unaryOp term"""
         if self.token.tag == "integerConstant":
             self.writexml(branch)
         elif self.token.tag == "stringConstant":
@@ -340,36 +368,38 @@ class CompilationEngine:
         return self.idx < len(self.tokens)
 
     def advance(self):
-        print(self.token.tag + " " + self.token.text)
+        """Advances"""
         if self.hasMoreTokens():
             self.idx += 1
             self.token = self.tokens[self.idx]
         else:
-            self.token = None
+            raise Exception(f"Tried to advance further than file length.")
 
     def writexml(self, branch):
+        """Write current element tag and text to XML structure"""
         ET.SubElement(branch, self.token.tag).text = self.token.text
 
     def verify(self, expectedTag: str, expectedText: str):
-        # if (self.token.tag != expectedTag) or (self.token.text != expectedText):
-        #    raise Exception(
-        #        f"Expected '<"
-        #        + expectedTag
-        #        + "> "
-        #        + expectedText
-        #        + " </"
-        #        + expectedTag
-        #        + ">' but got '<"
-        #        + self.token.tag
-        #        + "> "
-        #        + self.token.text
-        #        + " </"
-        #        + self.token.tag
-        #        + ">'"
-        #    )
-        a = expectedTag + expectedText
+        """Debug verify function."""
+        if (self.token.tag != expectedTag) or (self.token.text != expectedText):
+            raise Exception(
+                f"Expected '<"
+                + expectedTag
+                + "> "
+                + expectedText
+                + " </"
+                + expectedTag
+                + ">' but got '<"
+                + self.token.tag
+                + "> "
+                + self.token.text
+                + " </"
+                + self.token.tag
+                + ">'"
+            )
 
     def peek(self):
+        """Checks next element in token list without advancing"""
         if self.hasMoreTokens():
             return self.tokens[self.idx + 1]
         return None
