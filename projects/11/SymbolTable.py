@@ -1,9 +1,3 @@
-# The purpose of the symboltable:
-# - Every identifier found starting with 'var', 'static'... is added to symbol table with type, kind, and run index
-# - When we run the code and find a non-hashed identifier, we can assume this is a class/subroutine name
-#   ... We can then peek to see if class/subroutine; if 'subroutine', we find '.' or '(', else 'class'.
-
-import copy
 
 class SymbolTable:
 
@@ -36,7 +30,7 @@ class SymbolTable:
         CLASS scope. 'var' & 'arg' have SUBROUTINE scope.
         
             Parameters:
-                name (str): __name__
+                name (str): identifier
                 type (str): int, char, string etc...
                 kind (str): static / field / var / arg
             Returns:
